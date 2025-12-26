@@ -5,43 +5,35 @@ import java.util.List;
 
 public class Carrello {
 
-    private static Carrello instance;
+    // Rimosso: private static Carrello instance;
     private List<Scarpa> scarpeSelezionate;
     private double totale;
 
-    private Carrello() {
+    // Costruttore pubblico
+    public Carrello() {
         this.scarpeSelezionate = new ArrayList<>();
         this.totale = 0.0;
     }
 
-    public static synchronized Carrello getInstance() {
-        if (instance == null) {
-            instance = new Carrello();
-        }
-        return instance;
-    }
+    // Rimosso: public static synchronized Carrello getInstance() ...
 
     public void aggiungiScarpa(Scarpa s) {
-        scarpeSelezionate.add(s);
-        totale += s.getPrezzo();
+        this.scarpeSelezionate.add(s);
+        this.totale += s.getPrezzo(); // Assumendo che Scarpa abbia getPrezzo()
     }
 
-    public void rimuoviScarpa(Scarpa s) {
-        if(scarpeSelezionate.remove(s)) {
-            totale -= s.getPrezzo();
-        }
-    }
-
-    public void svuotaCarrello() {
-        scarpeSelezionate.clear();
-        totale = 0.0;
-    }
-
+    // Getter e Setter necessari...
     public List<Scarpa> getScarpeSelezionate() {
-        return new ArrayList<>(scarpeSelezionate);
+        return scarpeSelezionate;
     }
 
     public double getTotale() {
         return totale;
+    }
+
+    // In Carrello.java
+    public void svuotaCarrello() {
+        this.scarpeSelezionate.clear();
+        this.totale = 0.0;
     }
 }
