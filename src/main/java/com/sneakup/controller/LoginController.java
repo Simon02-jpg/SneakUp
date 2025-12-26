@@ -3,19 +3,28 @@ package com.sneakup.controller;
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.domain.Ruolo;
 
+import java.util.Map;
+
 public class LoginController {
 
-    public Ruolo login(String username, String password) throws SneakUpException {
-        // SIMULAZIONE LOGIN (In seguito potremo collegarlo al DAO Utenti)
+    // Simuliamo un database in memoria (mappa username -> password)
+    private static final Map<String, String> MOCK_DB_VENDITORI = Map.of("admin", "admin");
+    private static final Map<String, String> MOCK_DB_CLIENTI = Map.of("user", "user");
 
-        if ("admin".equals(username) && "admin".equals(password)) {
+    public Ruolo login(String username, String password) throws SneakUpException {
+
+        if (checkCredentials(MOCK_DB_VENDITORI, username, password)) {
             return Ruolo.VENDITORE;
         }
-        else if ("user".equals(username) && "user".equals(password)) {
+        else if (checkCredentials(MOCK_DB_CLIENTI, username, password)) {
             return Ruolo.CLIENTE;
         }
-        else {
-            throw new SneakUpException("Credenziali non valide. Riprova.");
-        }
+
+        throw new SneakUpException("Credenziali non valide");
+    }
+
+    // Metodo helper per verificare le credenziali
+    private boolean checkCredentials(Map<String, String> db, String user, String pass) {
+        return db.containsKey(user) && db.get(user).equals(pass);
     }
 }
