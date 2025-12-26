@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="CENTER" spacing="15.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sneakup.view.InserisciScarpaGUIController">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <Label text="Nuova Scarpa" textFill="#2a2a2a">
+        <font>
+            <Font name="System Bold" size="24.0" />
+        </font>
+    </Label>
+
+    <TextField fx:id="modelloField" promptText="Modello (es. Air Jordan)" />
+    <TextField fx:id="marcaField" promptText="Marca (es. Nike)" />
+
+    <ComboBox fx:id="categoriaBox" prefWidth="300.0" promptText="Seleziona Categoria" />
+
+    <TextField fx:id="tagliaField" promptText="Taglia (es. 42.5)" />
+    <TextField fx:id="prezzoField" promptText="Prezzo (es. 120.00)" />
+    <TextField fx:id="quantitaField" promptText="Quantità in Magazzino" />
+
+    <Button fx:id="btnInserisci" mnemonicParsing="false" onAction="#handleInserisci" prefWidth="200.0" style="-fx-background-color: #007bff; -fx-text-fill: white;" text="AGGIUNGI AL CATALOGO">
+        <font>
+            <Font name="System Bold" size="12.0" />
+        </font>
+    </Button>
+
+    <Button onAction="#tornaAlMenu" text="Torna al Menu" style="-fx-background-color: transparent; -fx-text-fill: gray; -fx-underline: true;" />
+
+</VBox>

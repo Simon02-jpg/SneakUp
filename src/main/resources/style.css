@@ -1,0 +1,53 @@
+/* --- STILE PER I BRAND LOGO BUTTONS --- */
+
+.brand-button {
+    -fx-background-color: transparent; /* Sfondo trasparente */
+    -fx-border-color: #eeeeee;         /* Bordo sottile grigio */
+    -fx-border-width: 2px;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+    -fx-padding: 20;
+}
+
+.brand-button:hover {
+    -fx-background-color: #f8f9fa;     /* Grigio chiarissimo al passaggio mouse */
+    -fx-border-color: #111111;         /* Bordo nero quando passi sopra */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5); /* Ombra */
+    -fx-scale-x: 1.05;                 /* Leggero zoom */
+    -fx-scale-y: 1.05;
+}
+
+.button-text-only {
+    -fx-background-color: transparent;
+    -fx-text-fill: #666666;
+    -fx-underline: true;
+    -fx-cursor: hand;
+}
+
+/* --- HEADER BAR ROSSA --- */
+.header-bar {
+    -fx-background-color: #D32F2F; /* Rosso intenso */
+    -fx-padding: 10 30 10 30;      /* Spaziatura */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 3);
+}
+
+/* Stile per i link del Menu (Home, Carrello, Preferiti) */
+.menu-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+
+.menu-button:hover {
+    -fx-underline: true;
+    -fx-text-fill: #FFEB3B; /* Giallo quando passi sopra */
+}
+
+/* Stile speciale per la bandiera o icone piccole */
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-cursor: hand;
+    -fx-padding: 0 10 0 10;
+}
