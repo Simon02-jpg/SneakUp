@@ -7,9 +7,12 @@ import com.sneakup.model.dao.memory.ScarpaDAOMemory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DAOFactory {
 
+    private static final Logger logger = Logger.getLogger(DAOFactory.class.getName());
     private static DAOFactory instance = null;
     private ScarpaDAO daoInstance = null; // Cache del DAO per non ricrearlo ogni volta
 
@@ -47,8 +50,12 @@ public class DAOFactory {
             prop.load(input);
             return prop.getProperty("persistence.type", "MEMORY"); // Default MEMORY se manca la chiave
         } catch (IOException ex) {
-            ex.printStackTrace();
-            return "MEMORY";
+        // ex.printStackTrace();  <-- RIMUOVI QUESTA RIGA
+
+        // AGGIUNGI QUESTA: Registra l'errore in modo sicuro
+        logger.log(Level.SEVERE, "Impossibile leggere il file di configurazione, uso MEMORY come default", ex);
+
+        return "MEMORY";
         }
     }
 
