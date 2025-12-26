@@ -13,7 +13,6 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
@@ -26,6 +25,14 @@ public class HomeClienteGUIController {
     @FXML private TableColumn<Scarpa, Void> colonnaAzioni;
 
     private final VisualizzaScarpeController logicController = new VisualizzaScarpeController();
+
+    // 1. Variabile per contenere il carrello ricevuto dal Login
+    private Carrello carrello;
+
+    // 2. Setter per ricevere il carrello
+    public void setCarrello(Carrello carrello) {
+        this.carrello = carrello;
+    }
 
     @FXML
     public void initialize() {
@@ -55,9 +62,13 @@ public class HomeClienteGUIController {
                         btn.setOnAction((ActionEvent event) -> {
                             Scarpa scarpaScelta = getTableView().getItems().get(getIndex());
 
-                            // LOGICA AGGIUNTA AL CARRELLO
-                            Carrello.getInstance().aggiungiScarpa(scarpaScelta);
-                            mostraAlert("Carrello", "Aggiunto: " + scarpaScelta.getModello());
+                            // MODIFICA QUI: Usa this.carrello invece di getInstance()
+                            if (carrello != null) {
+                                carrello.aggiungiScarpa(scarpaScelta);
+                                mostraAlert("Carrello", "Aggiunto: " + scarpaScelta.getModello());
+                            } else {
+                                mostraAlert("Errore", "Carrello non inizializzato!");
+                            }
                         });
                     }
 
@@ -76,19 +87,30 @@ public class HomeClienteGUIController {
         colonnaAzioni.setCellFactory(cellFactory);
     }
 
+    // MODIFICA QUI: Passaggio del carrello alla schermata successiva
     @FXML
     private void vaiAlCarrello(ActionEvent event) {
-        cambiaScena(event, "/com/sneakup/view/VisualizzaCarrello.fxml");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/VisualizzaCarrello.fxml"));
+            Parent root = loader.load();
+
+            // Passa il carrello al controller del carrello
+            CarrelloGUIController controller = loader.getController();
+            controller.setCarrello(this.carrello);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void logout(ActionEvent event) {
-        cambiaScena(event, "/com/sneakup/view/Login.fxml");
-    }
-
-    private void cambiaScena(ActionEvent event, String fxml) {
+        // Al logout il carrello si perde (corretto), si torna al login
         try {
-            Parent root = FXMLLoader.load(getClass().getResource(fxml));
+            Parent root = FXMLLoader.load(getClass().getResource("/com/sneakup/view/Login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();

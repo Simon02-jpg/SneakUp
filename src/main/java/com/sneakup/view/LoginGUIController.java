@@ -2,6 +2,7 @@ package com.sneakup.view;
 
 import com.sneakup.controller.LoginController;
 import com.sneakup.exception.SneakUpException;
+import com.sneakup.model.domain.Carrello; // Importa Carrello
 import com.sneakup.model.domain.Ruolo;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -33,31 +34,45 @@ public class LoginGUIController {
             Ruolo ruolo = loginController.login(user, pass);
 
             if (ruolo == Ruolo.VENDITORE) {
-                // Se è VENDITORE va al menu di gestione (quello che abbiamo già fatto)
                 cambiaScena(event, "/com/sneakup/view/MenuPrincipale.fxml");
             } else {
-                // Se è CLIENTE va alla Home Page Cliente (che dobbiamo creare ora!)
-                cambiaScena(event, "/com/sneakup/view/HomeCliente.fxml");
+                // MODIFICA QUI: Invece di cambiaScena generico, usiamo un metodo specifico
+                // per passare il carrello
+                apriHomeCliente(event);
             }
 
-        } catch (SneakUpException e) {
+        } catch (SneakUpException | IOException e) {
             erroreLabel.setText(e.getMessage());
             erroreLabel.setVisible(true);
+            e.printStackTrace();
         }
     }
 
-    private void cambiaScena(ActionEvent event, String fxmlPath) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.centerOnScreen();
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            erroreLabel.setText("Errore nel caricamento della pagina: " + fxmlPath);
-            erroreLabel.setVisible(true);
-        }
+    // NUOVO METODO: Crea il carrello e lo passa alla Home
+    private void apriHomeCliente(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/HomeCliente.fxml"));
+        Parent root = loader.load();
+
+        // 1. Recupera il controller della Home
+        HomeClienteGUIController homeController = loader.getController();
+
+        // 2. Crea un NUOVO carrello e passalo
+        Carrello nuovoCarrello = new Carrello();
+        homeController.setCarrello(nuovoCarrello);
+
+        // 3. Mostra la scena
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(root));
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    private void cambiaScena(ActionEvent event, String fxmlPath) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+        Parent root = loader.load();
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.setScene(new Scene(root));
+        stage.centerOnScreen();
+        stage.show();
     }
 }
