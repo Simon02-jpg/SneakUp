@@ -2,6 +2,7 @@ package com.sneakup.model.dao;
 
 import com.sneakup.model.dao.fs.ScarpaDAOFileSystem;
 import com.sneakup.model.dao.memory.ScarpaDAOMemory;
+import com.sneakup.model.dao.db.ScarpaDAOJDBC;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,12 +34,11 @@ public class DAOFactory {
 
             if ("FILESYSTEM".equalsIgnoreCase(type)) {
                 daoInstance = new ScarpaDAOFileSystem();
-                // 2. USO LOGGER INVECE DI SYSTEM.OUT
-                logger.info("LOG: Avvio in modalità FULL (File System)");
+            } else if ("JDBC".equalsIgnoreCase(type) || "DBMS".equalsIgnoreCase(type)) {
+                // NUOVO RAMO
+                daoInstance = new ScarpaDAOJDBC();
             } else {
                 daoInstance = new ScarpaDAOMemory();
-                // 2. USO LOGGER INVECE DI SYSTEM.OUT
-                logger.info("LOG: Avvio in modalità DEMO (RAM)");
             }
         }
         return daoInstance;

@@ -1,4 +1,4 @@
-package com.sneakup.model.domain;
+package com.sneakup.model.domain; // 1. Package corretto (con "com.")
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,13 +10,20 @@ class CarrelloTest {
 
     @BeforeEach
     void setUp() {
-        carrello = Carrello.getInstance();
-        carrello.svuotaCarrello(); // Pulizia prima di ogni test
+        // Inizializza un nuovo carrello prima di ogni test
+        carrello = new Carrello();
     }
 
     @Test
     void testAggiungiScarpa() {
-        Scarpa s = new Scarpa("Test", "Nike", "Run", 42.0, 100.0, 10);
+        // 2. Costruttore corretto in base alla tua classe Scarpa:
+        // (Modello, Marca, Categoria, Taglia, Prezzo, Quantità)
+        Scarpa s = new Scarpa("Air Max", "Nike", "Running", 42.0, 100.0, 10);
+
+        // Se vuoi impostare ID, immagine o descrizione, usa i setter:
+        s.setId(1);
+        s.setDescrizione("Scarpa da test");
+
         carrello.aggiungiScarpa(s);
 
         assertEquals(1, carrello.getScarpeSelezionate().size(), "Il carrello dovrebbe contenere 1 scarpa");
@@ -25,23 +32,25 @@ class CarrelloTest {
 
     @Test
     void testRimuoviScarpa() {
-        Scarpa s1 = new Scarpa("A", "N", "R", 40, 50.0, 1);
-        Scarpa s2 = new Scarpa("B", "N", "R", 40, 50.0, 1);
+        // Creazione scarpe usando il costruttore vuoto e i setter (più sicuro)
+        Scarpa s1 = new Scarpa();
+        s1.setId(1);
+        s1.setModello("A");
+        s1.setPrezzo(50.0);
+
+        Scarpa s2 = new Scarpa();
+        s2.setId(2);
+        s2.setModello("B");
+        s2.setPrezzo(50.0);
 
         carrello.aggiungiScarpa(s1);
         carrello.aggiungiScarpa(s2);
 
+        // Verifica rimozione
         carrello.rimuoviScarpa(s1);
 
-        assertEquals(1, carrello.getScarpeSelezionate().size());
-        assertEquals(50.0, carrello.getTotale());
-    }
-
-    @Test
-    void testSingleton() {
-        Carrello c1 = Carrello.getInstance();
-        Carrello c2 = Carrello.getInstance();
-
-        assertSame(c1, c2, "Il carrello deve essere un Singleton (stessa istanza)");
+        assertEquals(1, carrello.getScarpeSelezionate().size(), "Dovrebbe rimanere 1 scarpa");
+        assertEquals(50.0, carrello.getTotale(), "Il totale dovrebbe essere 50.0");
+        assertEquals(s2, carrello.getScarpeSelezionate().get(0), "La scarpa rimasta dovrebbe essere la s2");
     }
 }

@@ -13,6 +13,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import com.sneakup.model.domain.Recensione; // FONDAMENTALE
+import javafx.scene.control.TextArea;
 
 import java.util.List;
 
@@ -105,6 +107,34 @@ public class VisualizzaCatalogoGUIController {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void mostraRecensioni(Scarpa s) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Recensioni - " + s.getModello());
+
+        // Calcola media formattata
+        String media = String.format("%.1f", s.getMediaVoti());
+        alert.setHeaderText("Valutazione Media Utenti: " + media + " / 5.0");
+
+        StringBuilder sb = new StringBuilder();
+        if (s.getRecensioni().isEmpty()) {
+            sb.append("Non ci sono ancora recensioni per questa scarpa.");
+        } else {
+            for (Recensione r : s.getRecensioni()) {
+                sb.append("• ").append(r.toString()).append("\n\n");
+            }
+        }
+
+        // Usiamo una TextArea per rendere il testo scorrevole se lungo
+        TextArea area = new TextArea(sb.toString());
+        area.setEditable(false);
+        area.setWrapText(true);
+        area.setMaxWidth(Double.MAX_VALUE);
+        area.setMaxHeight(Double.MAX_VALUE);
+
+        alert.getDialogPane().setContent(area);
+        alert.showAndWait();
     }
 
     // ... (metodi caricaDati, handleAggiorna, tornaAlMenu rimangono uguali) ...

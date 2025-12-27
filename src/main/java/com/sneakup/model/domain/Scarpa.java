@@ -2,6 +2,8 @@ package com.sneakup.model.domain;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Scarpa implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -16,10 +18,15 @@ public class Scarpa implements Serializable {
     private String descrizione;
     private String urlImmagine;
 
-    // Costruttore vuoto (utile per il DAO)
-    public Scarpa() {}
+    // NUOVO CAMPO
+    private List<Recensione> recensioni;
 
-    // Costruttore completo
+    // Aggiorna il costruttore vuoto
+    public Scarpa() {
+        this.recensioni = new ArrayList<>();
+    }
+
+    // Aggiorna il costruttore completo
     public Scarpa(String modello, String marca, String categoria, double taglia, double prezzo, int quantita) {
         this.modello = modello;
         this.marca = marca;
@@ -27,7 +34,30 @@ public class Scarpa implements Serializable {
         this.taglia = taglia;
         this.prezzo = prezzo;
         this.quantitaDisponibile = quantita;
+        // Inizializza la lista
+        this.recensioni = new ArrayList<>();
     }
+
+    // Getter e Setter per le recensioni
+    public List<Recensione> getRecensioni() {
+        return recensioni;
+    }
+
+    public void aggiungiRecensione(Recensione r) {
+        this.recensioni.add(r);
+    }
+
+    // Metodo di comodo per calcolare la media voti
+    public double getMediaVoti() {
+        if (recensioni.isEmpty()) return 0.0;
+        double somma = 0;
+        for (Recensione r : recensioni) {
+            somma += r.getVoto();
+        }
+        return somma / recensioni.size();
+    }
+
+
 
     // --- GETTERS & SETTERS ---
     public int getId() { return id; }
