@@ -32,11 +32,6 @@ public class VisualizzaCatalogoGUIController {
 
     @FXML
     public void initialize() {
-        // COLLEGA LE COLONNE AI CAMPI DELLA CLASSE SCARPA
-        colonnaModello.setCellValueFactory(new PropertyValueFactory<>("modello"));
-        colonnaMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
-        colonnaPrezzo.setCellValueFactory(new PropertyValueFactory<>("prezzo"));
-
         setupTabella();
         caricaDati();
     }

@@ -30,21 +30,12 @@
         </Button>
     </HBox>
 
-    <TableView fx:id="tabellaScarpe" prefHeight="400.0" prefWidth="650.0">
+    <TableView fx:id="tabellaScarpe" prefHeight="400.0" prefWidth="600.0">
         <columns>
-            <TableColumn text="Modello" prefWidth="150.0">
-                <cellValueFactory><PropertyValueFactory property="modello" /></cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Marca" prefWidth="100.0">
-                <cellValueFactory><PropertyValueFactory property="marca" /></cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Taglia">
-                <cellValueFactory><PropertyValueFactory property="taglia" /></cellValueFactory>
-            </TableColumn>
-            <TableColumn text="Prezzo (€)">
-                <cellValueFactory><PropertyValueFactory property="prezzo" /></cellValueFactory>
-            </TableColumn>
-            <TableColumn fx:id="colonnaAzioni" text="Azioni" prefWidth="150.0" />
+            <TableColumn fx:id="colonnaModello" text="Modello" />
+            <TableColumn fx:id="colonnaMarca" text="Marca" />
+            <TableColumn fx:id="colonnaPrezzo" text="Prezzo" />
+            <TableColumn fx:id="colonnaAzioni" text="Azioni" />
         </columns>
     </TableView>
 

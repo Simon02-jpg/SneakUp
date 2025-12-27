@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory; // AGGIUNTO
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
@@ -21,21 +22,28 @@ import java.util.List;
 
 public class HomeClienteGUIController {
 
+    // CORREZIONE: Assicurati che questi fx:id corrispondano a HomeCliente.fxml
     @FXML private TableView<Scarpa> tabellaScarpe;
+    @FXML private TableColumn<Scarpa, String> colonnaModello;
+    @FXML private TableColumn<Scarpa, String> colonnaMarca;
+    @FXML private TableColumn<Scarpa, Double> colonnaPrezzo;
     @FXML private TableColumn<Scarpa, Void> colonnaAzioni;
 
     private final VisualizzaScarpeController logicController = new VisualizzaScarpeController();
-
-    // 1. Variabile per contenere il carrello ricevuto dal Login
     private Carrello carrello;
 
-    // 2. Setter per ricevere il carrello
     public void setCarrello(Carrello carrello) {
         this.carrello = carrello;
     }
 
     @FXML
     public void initialize() {
+        // CORREZIONE: Collega i dati alle colonne (altrimenti la tabella resta vuota o crasha)
+        // Se hai già messo i PropertyValueFactory nel file FXML, puoi commentare queste 3 righe
+        colonnaModello.setCellValueFactory(new PropertyValueFactory<>("modello"));
+        colonnaMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
+        colonnaPrezzo.setCellValueFactory(new PropertyValueFactory<>("prezzo"));
+
         caricaDati();
         aggiungiBottoniAllaTabella();
     }
@@ -43,10 +51,9 @@ public class HomeClienteGUIController {
     private void caricaDati() {
         try {
             List<Scarpa> lista = logicController.getTutteLeScarpe();
-            ObservableList<Scarpa> dati = FXCollections.observableArrayList(lista);
-            tabellaScarpe.setItems(dati);
+            tabellaScarpe.setItems(FXCollections.observableArrayList(lista));
         } catch (SneakUpException e) {
-            mostraAlert("Errore", "Impossibile caricare il catalogo.");
+            mostraAlert("Errore", "Impossibile caricare il catalogo dal database.");
         }
     }
 
@@ -56,18 +63,14 @@ public class HomeClienteGUIController {
             public TableCell<Scarpa, Void> call(final TableColumn<Scarpa, Void> param) {
                 return new TableCell<>() {
                     private final Button btn = new Button("Aggiungi");
-
                     {
-                        btn.setStyle("-fx-background-color: #007bff; -fx-text-fill: white;");
+                        btn.setStyle("-fx-background-color: #28a745; -fx-text-fill: white; -fx-font-weight: bold;");
                         btn.setOnAction((ActionEvent event) -> {
                             Scarpa scarpaScelta = getTableView().getItems().get(getIndex());
-
-                            // MODIFICA QUI: Usa this.carrello invece di getInstance()
                             if (carrello != null) {
                                 carrello.aggiungiScarpa(scarpaScelta);
-                                mostraAlert("Carrello", "Aggiunto: " + scarpaScelta.getModello());
-                            } else {
-                                mostraAlert("Errore", "Carrello non inizializzato!");
+                                // Feedback visivo (opzionale: potresti usare una label invece di un alert fastidioso)
+                                System.out.println("Aggiunto al carrello: " + scarpaScelta.getModello());
                             }
                         });
                     }
@@ -75,11 +78,7 @@ public class HomeClienteGUIController {
                     @Override
                     public void updateItem(Void item, boolean empty) {
                         super.updateItem(item, empty);
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            setGraphic(btn);
-                        }
+                        setGraphic(empty ? null : btn);
                     }
                 };
             }
@@ -87,16 +86,14 @@ public class HomeClienteGUIController {
         colonnaAzioni.setCellFactory(cellFactory);
     }
 
-    // MODIFICA QUI: Passaggio del carrello alla schermata successiva
     @FXML
     private void vaiAlCarrello(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/VisualizzaCarrello.fxml"));
             Parent root = loader.load();
 
-            // Passa il carrello al controller del carrello
             CarrelloGUIController controller = loader.getController();
-            controller.setCarrello(this.carrello);
+            controller.setCarrello(this.carrello); // Passa l'oggetto carrello
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -108,7 +105,6 @@ public class HomeClienteGUIController {
 
     @FXML
     private void logout(ActionEvent event) {
-        // Al logout il carrello si perde (corretto), si torna al login
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/com/sneakup/view/Login.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

@@ -55,7 +55,7 @@ public class ScarpaDAOJDBC implements ScarpaDAO {
     @Override
     public List<Scarpa> getAllScarpe() throws SneakUpException {
         List<Scarpa> lista = new ArrayList<>();
-        // Query corretta secondo il tuo database.sql
+        // Query che usa i nomi esatti delle colonne del tuo database.sql
         String query = "SELECT idSCARPA, modello, marca, categoria, taglia, prezzo, quantita FROM SCARPE";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
@@ -64,8 +64,12 @@ public class ScarpaDAOJDBC implements ScarpaDAO {
 
             while (rs.next()) {
                 Scarpa s = new Scarpa();
-                int id = rs.getInt("idSCARPA"); // idSCARPA come nel database.sql
+
+                // 1. Recuperiamo l'ID usando il nome esatto del DB: idSCARPA
+                int id = rs.getInt("idSCARPA");
                 s.setId(id);
+
+                // 2. Popoliamo gli altri campi
                 s.setModello(rs.getString("modello"));
                 s.setMarca(rs.getString("marca"));
                 s.setCategoria(rs.getString("categoria"));
@@ -73,12 +77,13 @@ public class ScarpaDAOJDBC implements ScarpaDAO {
                 s.setPrezzo(rs.getDouble("prezzo"));
                 s.setQuantitaDisponibile(rs.getInt("quantita"));
 
-                // Carica le recensioni associate
+                // 3. Carichiamo eventuali recensioni associate a questo ID
                 s.getRecensioni().addAll(getRecensioniPerScarpa(id));
+
                 lista.add(s);
             }
         } catch (SQLException e) {
-            throw new SneakUpException("Errore lettura catalogo", e);
+            throw new SneakUpException("Errore durante la lettura del catalogo dal DB", e);
         }
         return lista;
     }

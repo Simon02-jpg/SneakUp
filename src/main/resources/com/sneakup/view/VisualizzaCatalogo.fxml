@@ -23,25 +23,31 @@
 
     <TableView fx:id="tabellaScarpe" prefHeight="400.0" prefWidth="650.0">
         <columns>
-            <TableColumn prefWidth="150.0" text="Modello">
+            <TableColumn fx:id="colonnaModello" prefWidth="150.0" text="Modello">
                 <cellValueFactory><PropertyValueFactory property="modello" /></cellValueFactory>
             </TableColumn>
-            <TableColumn prefWidth="100.0" text="Marca">
+
+            <TableColumn fx:id="colonnaMarca" prefWidth="100.0" text="Marca">
                 <cellValueFactory><PropertyValueFactory property="marca" /></cellValueFactory>
             </TableColumn>
+
             <TableColumn prefWidth="100.0" text="Categoria">
                 <cellValueFactory><PropertyValueFactory property="categoria" /></cellValueFactory>
             </TableColumn>
+
             <TableColumn text="Taglia">
                 <cellValueFactory><PropertyValueFactory property="taglia" /></cellValueFactory>
             </TableColumn>
-            <TableColumn text="Prezzo (€)">
+
+            <TableColumn fx:id="colonnaPrezzo" text="Prezzo (€)">
                 <cellValueFactory><PropertyValueFactory property="prezzo" /></cellValueFactory>
             </TableColumn>
+
             <TableColumn text="Q.tà">
                 <cellValueFactory><PropertyValueFactory property="quantitaDisponibile" /></cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="colonnaAzioni" prefWidth="100.0" text="Azioni" />
+
+            <TableColumn fx:id="colonnaAzioni" prefWidth="150.0" text="Azioni" />
         </columns>
     </TableView>
 
