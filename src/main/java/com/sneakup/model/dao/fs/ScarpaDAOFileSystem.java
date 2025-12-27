@@ -2,8 +2,8 @@ package com.sneakup.model.dao.fs;
 
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.dao.ScarpaDAO;
+import com.sneakup.model.domain.Recensione;
 import com.sneakup.model.domain.Scarpa;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,24 +15,19 @@ public class ScarpaDAOFileSystem implements ScarpaDAO {
 
     @Override
     public void addScarpa(Scarpa scarpa) throws SneakUpException {
-        // ... (Codice esistente per addScarpa, lascia invariato) ...
-        // Assicurati che il codice esistente usi true nel FileWriter per l'append
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, true))) {
             if (scarpa.getId() == 0) scarpa.setId((int) (System.currentTimeMillis() / 1000));
             scriviRiga(writer, scarpa);
         } catch (IOException e) {
-            throw new SneakUpException("Errore scrittura", e);
+            throw new SneakUpException("Errore scrittura file", e);
         }
     }
 
     @Override
     public List<Scarpa> getAllScarpe() throws SneakUpException {
-        // ... (Codice esistente per getAllScarpe, lascia invariato) ...
-        // Copia qui la logica di lettura che avevi già fatto
         List<Scarpa> lista = new ArrayList<>();
         File file = new File(FILE_NAME);
         if (!file.exists()) return lista;
-
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -50,66 +45,48 @@ public class ScarpaDAOFileSystem implements ScarpaDAO {
                 }
             }
         } catch (IOException e) {
-            throw new SneakUpException("Errore lettura", e);
+            throw new SneakUpException("Errore lettura file", e);
         }
         return lista;
     }
 
-    // --- NUOVI METODI ---
-
     @Override
-    public void deleteScarpa(int idDaEliminare) throws SneakUpException {
+    public void deleteScarpa(int id) throws SneakUpException {
         List<Scarpa> tutte = getAllScarpe();
-        // Rimuove se l'ID corrisponde
-        boolean rimosso = tutte.removeIf(s -> s.getId() == idDaEliminare);
-
-        if (rimosso) {
+        if (tutte.removeIf(s -> s.getId() == id)) {
             sovrascriviFile(tutte);
-        } else {
-            throw new SneakUpException("Impossibile eliminare: ID non trovato.");
-        }
+        } else throw new SneakUpException("ID non trovato.");
     }
 
     @Override
-    public void updateScarpa(Scarpa scarpaAggiornata) throws SneakUpException {
+    public void updateScarpa(Scarpa s) throws SneakUpException {
         List<Scarpa> tutte = getAllScarpe();
         boolean trovato = false;
-
         for (int i = 0; i < tutte.size(); i++) {
-            if (tutte.get(i).getId() == scarpaAggiornata.getId()) {
-                tutte.set(i, scarpaAggiornata); // Sostituisci
+            if (tutte.get(i).getId() == s.getId()) {
+                tutte.set(i, s);
                 trovato = true;
                 break;
             }
         }
-
-        if (trovato) {
-            sovrascriviFile(tutte);
-        } else {
-            throw new SneakUpException("Impossibile modificare: Scarpa non trovata.");
-        }
+        if (trovato) sovrascriviFile(tutte);
+        else throw new SneakUpException("ID non trovato.");
     }
 
-    // Metodo helper per riscrivere tutto il file
-    private void sovrascriviFile(List<Scarpa> listaScarpe) throws SneakUpException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, false))) { // FALSE = Sovrascrivi
-            for (Scarpa s : listaScarpe) {
-                scriviRiga(writer, s);
-            }
-        } catch (IOException e) {
-            throw new SneakUpException("Errore aggiornamento file", e);
-        }
+    @Override
+    public void aggiungiRecensione(int id, Recensione r) { /* Non implementato su FS */ }
+
+    @Override
+    public List<Recensione> getRecensioniPerScarpa(int id) { return new ArrayList<>(); }
+
+    private void sovrascriviFile(List<Scarpa> lista) throws SneakUpException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, false))) {
+            for (Scarpa s : lista) scriviRiga(writer, s);
+        } catch (IOException e) { throw new SneakUpException("Errore sovrascrittura", e); }
     }
 
-    private void scriviRiga(BufferedWriter writer, Scarpa scarpa) throws IOException {
-        String riga = scarpa.getId() + SEPARATOR +
-                scarpa.getModello() + SEPARATOR +
-                scarpa.getMarca() + SEPARATOR +
-                scarpa.getCategoria() + SEPARATOR +
-                scarpa.getTaglia() + SEPARATOR +
-                scarpa.getPrezzo() + SEPARATOR +
-                scarpa.getQuantitaDisponibile();
-        writer.write(riga);
-        writer.newLine();
+    private void scriviRiga(BufferedWriter w, Scarpa s) throws IOException {
+        w.write(s.getId()+SEPARATOR+s.getModello()+SEPARATOR+s.getMarca()+SEPARATOR+s.getCategoria()+SEPARATOR+s.getTaglia()+SEPARATOR+s.getPrezzo()+SEPARATOR+s.getQuantitaDisponibile());
+        w.newLine();
     }
 }

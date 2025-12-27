@@ -15,18 +15,28 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import com.sneakup.model.domain.Recensione; // FONDAMENTALE
 import javafx.scene.control.TextArea;
-
+import javafx.scene.control.cell.PropertyValueFactory;
 import java.util.List;
 
 public class VisualizzaCatalogoGUIController {
 
     @FXML private TableView<Scarpa> tabellaScarpe;
-    @FXML private TableColumn<Scarpa, Void> colonnaAzioni; // Riferimento FXML
+    @FXML private TableColumn<Scarpa, Void> colonnaAzioni;
+
+    // AGGIUNGI QUESTE RIGHE PER VEDERE I DATI
+    @FXML private TableColumn<Scarpa, String> colonnaModello;
+    @FXML private TableColumn<Scarpa, String> colonnaMarca;
+    @FXML private TableColumn<Scarpa, Double> colonnaPrezzo;
 
     private final VisualizzaScarpeController logicController = new VisualizzaScarpeController();
 
     @FXML
     public void initialize() {
+        // COLLEGA LE COLONNE AI CAMPI DELLA CLASSE SCARPA
+        colonnaModello.setCellValueFactory(new PropertyValueFactory<>("modello"));
+        colonnaMarca.setCellValueFactory(new PropertyValueFactory<>("marca"));
+        colonnaPrezzo.setCellValueFactory(new PropertyValueFactory<>("prezzo"));
+
         setupTabella();
         caricaDati();
     }
