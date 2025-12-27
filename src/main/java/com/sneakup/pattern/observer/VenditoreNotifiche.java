@@ -1,6 +1,7 @@
 package com.sneakup.pattern.observer;
 
 import com.sneakup.model.domain.Ordine;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class VenditoreNotifiche implements Observer {
@@ -14,8 +15,12 @@ public class VenditoreNotifiche implements Observer {
 
     @Override
     public void update(Ordine ordine) {
-        // Qui simuli l'invio della mail o notifica push
-        logger.info("NOTIFICA a " + nomeVenditore + ": Nuovo ordine ricevuto! " + ordine.toString());
-        System.out.println(">> [Email a " + nomeVenditore + "] Hai venduto delle scarpe! Dettagli ordine ID: " + ordine.getId());
+        // Messaggio informativo principale utilizzando i parametri per l'efficienza
+        logger.log(Level.INFO, "NOTIFICA a {0}: Nuovo ordine ricevuto! {1}",
+                new Object[]{nomeVenditore, ordine});
+
+        // Sostituzione di System.out con un logger dedicato alla simulazione dell'invio email
+        logger.log(Level.INFO, ">> [Email a {0}] Hai venduto delle scarpe! Dettagli ordine ID: {1}",
+                new Object[]{nomeVenditore, ordine.getId()});
     }
 }
