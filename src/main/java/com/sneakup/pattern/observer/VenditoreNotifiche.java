@@ -1,6 +1,8 @@
 package com.sneakup.pattern.observer;
 
 import com.sneakup.model.domain.Ordine;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,14 +15,16 @@ public class VenditoreNotifiche implements Observer {
         this.nomeVenditore = nome;
     }
 
+    // Nel metodo update di VenditoreNotifiche.java
     @Override
-    public void update(Ordine ordine) {
-        // Messaggio informativo principale utilizzando i parametri per l'efficienza
-        logger.log(Level.INFO, "NOTIFICA a {0}: Nuovo ordine ricevuto! {1}",
-                new Object[]{nomeVenditore, ordine});
-
-        // Sostituzione di System.out con un logger dedicato alla simulazione dell'invio email
-        logger.log(Level.INFO, ">> [Email a {0}] Hai venduto delle scarpe! Dettagli ordine ID: {1}",
-                new Object[]{nomeVenditore, ordine.getId()});
+    public void update(Ordine ordine) { // Cambiato da String a Ordine
+        javafx.application.Platform.runLater(() -> {
+            javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+            alert.setTitle("Notifica Venditore");
+            alert.setHeaderText("Nuovo Ordine Ricevuto!");
+            alert.setContentText("Hai ricevuto un nuovo ordine #" + ordine.getId() +
+                    "\nTotale: €" + ordine.getTotalePagato());
+            alert.show();
+        });
     }
 }

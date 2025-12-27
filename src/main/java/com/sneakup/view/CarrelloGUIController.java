@@ -1,6 +1,5 @@
 package com.sneakup.view;
 
-// --- IMPORT DI BASE JAVAFX ---
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,19 +9,22 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextInputDialog; // Serve per chiedere l'indirizzo
+import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.List; // FONDAMENTALE
 
-// --- IMPORT DEL TUO MODELLO ---
+// IMPORT MODELLO E DOMAIN
 import com.sneakup.model.domain.Carrello;
 import com.sneakup.model.domain.Scarpa;
+import com.sneakup.model.domain.Ordine;
 
-// --- IMPORT PER LA NUOVA LOGICA (Observer & Controller) ---
-import com.sneakup.controller.GestioneOrdiniController;
-import com.sneakup.pattern.observer.VenditoreNotifiche;
+// IMPORT LOGICA E PERSISTENZA
+import com.sneakup.model.dao.OrdineDAO;
+import com.sneakup.model.dao.db.OrdineDAOJDBC;
 import com.sneakup.exception.SneakUpException;
+import com.sneakup.pattern.observer.VenditoreNotifiche;
 
 public class CarrelloGUIController {
 
@@ -31,11 +33,6 @@ public class CarrelloGUIController {
 
     private Carrello carrello;
 
-    @FXML
-    public void initialize() {
-        // Inizializzazione vuota, il carrello viene passato dopo
-    }
-
     public void setCarrello(Carrello carrello) {
         this.carrello = carrello;
         aggiornaVista();
@@ -43,68 +40,66 @@ public class CarrelloGUIController {
 
     private void aggiornaVista() {
         if (carrello == null) return;
-
         listaCarrello.getItems().clear();
         for (Scarpa s : carrello.getScarpeSelezionate()) {
-            listaCarrello.getItems().add(s.toString());
+            listaCarrello.getItems().add(s.getMarca() + " " + s.getModello() + " - €" + s.getPrezzo());
         }
-
-        // Formattazione a 2 decimali per il prezzo
         totaleLabel.setText(String.format("Totale: € %.2f", carrello.getTotale()));
     }
 
     @FXML
-    private void confermaOrdine() {
-        // 1. Controllo se il carrello è vuoto
+    private void handleConfermaOrdine(ActionEvent event) {
+        // 1. Controllo carrello vuoto
         if (carrello == null || carrello.getScarpeSelezionate().isEmpty()) {
-            mostraAlert(Alert.AlertType.WARNING, "Carrello Vuoto", "Non ci sono articoli da acquistare.");
+            mostraAlert(Alert.AlertType.WARNING, "Attenzione", "Il carrello è vuoto!");
             return;
         }
 
-        // 2. Chiediamo l'indirizzo di spedizione (Simulazione input utente)
-        TextInputDialog dialog = new TextInputDialog("Via Roma 10");
-        dialog.setTitle("Dati Spedizione");
-        dialog.setHeaderText("Conferma Indirizzo");
-        dialog.setContentText("Indirizzo di spedizione:");
+        // 2. Richiesta indirizzo tramite Dialog
+        TextInputDialog dialog = new TextInputDialog("Via Roma, 10");
+        dialog.setTitle("Conferma Acquisto");
+        dialog.setHeaderText("Inserisci l'indirizzo di spedizione");
+        dialog.setContentText("Indirizzo:");
 
         Optional<String> result = dialog.showAndWait();
 
-        // Se l'utente clicca OK e c'è testo
         if (result.isPresent() && !result.get().trim().isEmpty()) {
             String indirizzo = result.get();
 
             try {
-                // --- Piattaforma logica & Pattern Observer ---
+                // 3. Creazione oggetto Ordine (usando il tuo costruttore specifico)
+                // Costruttore: Ordine(id, listaScarpe, totale, indirizzo)
+                List<Scarpa> scarpeDaComprare = carrello.getScarpe();
+                double totale = carrello.getTotale();
 
-                // Creiamo il Controller Applicativo (il "Subject")
-                GestioneOrdiniController gestioneOrdini = new GestioneOrdiniController();
+                Ordine nuovoOrdine = new Ordine(0, scarpeDaComprare, totale, indirizzo);
 
-                // Registriamo l'Observer (il Venditore che riceverà la notifica)
-                gestioneOrdini.attach(new VenditoreNotifiche("Nike Store Roma"));
+                // 4. Salvataggio su Database tramite DAO
+                OrdineDAO ordineDAO = new OrdineDAOJDBC();
+                ordineDAO.salvaOrdine(nuovoOrdine);
 
-                // Eseguiamo l'acquisto
-                gestioneOrdini.effettuaOrdine(this.carrello, indirizzo);
+                // 5. Gestione Notifica (Observer)
+                // Registriamo il venditore come osservatore per questo acquisto
+                VenditoreNotifiche notificatore = new VenditoreNotifiche("Store Centrale");
+                carrello.attach(notificatore);
 
-                // --- Successo ---
-                mostraAlert(Alert.AlertType.INFORMATION, "Ordine Confermato",
-                        "Grazie! Il tuo ordine è stato registrato e il venditore è stato notificato.");
+                // 6. Svuota il carrello e NOTIFICA (passando l'ordine creato)
+                carrello.svuota(nuovoOrdine);
 
-                // Pulizia e ritorno alla home
-                carrello.svuotaCarrello();
-                tornaHome(null); // Passiamo null se non abbiamo l'evento click diretto
+                // Rimuoviamo l'osservatore dopo la notifica per pulizia
+                carrello.detach(notificatore);
+
+                mostraAlert(Alert.AlertType.INFORMATION, "Successo", "Ordine effettuato! Il venditore è stato notificato.");
+
+                // Torna alla home
+                tornaHome(event);
 
             } catch (SneakUpException e) {
-                // Gestione errori di business (es. scarpa finita)
-                mostraAlert(Alert.AlertType.ERROR, "Errore durante l'ordine", e.getMessage());
-            } catch (Exception e) {
-                // Gestione errori imprevisti
-                e.printStackTrace();
-                mostraAlert(Alert.AlertType.ERROR, "Errore Tecnico", "Si è verificato un errore imprevisto.");
+                mostraAlert(Alert.AlertType.ERROR, "Errore DB", e.getMessage());
             }
         }
     }
 
-    // Metodo helper per mostrare messaggi
     private void mostraAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -119,15 +114,11 @@ public class CarrelloGUIController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/HomeCliente.fxml"));
             Parent root = loader.load();
 
-            // Se il metodo è chiamato manualmente con null, dobbiamo recuperare lo stage diversamente
-            // Qui assumiamo che se event è null, usiamo la finestra corrente di una delle view (es. listaCarrello)
-            Stage stage;
-            if (event != null) {
-                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            } else {
-                stage = (Stage) listaCarrello.getScene().getWindow();
-            }
+            // Passiamo il carrello (ora vuoto) alla home
+            HomeClienteGUIController controller = loader.getController();
+            controller.setCarrello(this.carrello);
 
+            Stage stage = (Stage) listaCarrello.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
         } catch (IOException e) {

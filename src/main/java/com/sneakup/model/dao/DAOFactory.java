@@ -3,6 +3,8 @@ package com.sneakup.model.dao;
 import com.sneakup.model.dao.fs.ScarpaDAOFileSystem;
 import com.sneakup.model.dao.memory.ScarpaDAOMemory;
 import com.sneakup.model.dao.db.ScarpaDAOJDBC;
+import com.sneakup.model.dao.OrdineDAO;
+import com.sneakup.model.dao.db.OrdineDAOJDBC;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,5 +72,17 @@ public class DAOFactory {
         } else {
             this.daoInstance = new ScarpaDAOFileSystem();
         }
+    }
+
+    public OrdineDAO getOrdineDAO() {
+        String type = leggiConfigurazione();
+
+        if ("JDBC".equalsIgnoreCase(type) || "DBMS".equalsIgnoreCase(type)) {
+            return new OrdineDAOJDBC();
+        }
+
+        // Se non sei in modalità DB, puoi ritornare null o una versione Memory
+        // Per ora, dato che stiamo implementando il DB:
+        return new OrdineDAOJDBC();
     }
 }

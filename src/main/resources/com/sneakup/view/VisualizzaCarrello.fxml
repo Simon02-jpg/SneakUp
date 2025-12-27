@@ -26,8 +26,7 @@
         </font>
     </Label>
 
-    <Button onAction="#confermaOrdine" prefWidth="200.0" style="-fx-background-color: #28a745; -fx-text-fill: white;" text="CONFERMA ORDINE (CHECKOUT)">
-        <font>
+    <Button onAction="#handleConfermaOrdine" prefWidth="200.0" style="-fx-background-color: #28a745; -fx-text-fill: white;" text="CONFERMA ORDINE (CHECKOUT)">        <font>
             <Font name="System Bold" size="12.0" />
         </font>
     </Button>
