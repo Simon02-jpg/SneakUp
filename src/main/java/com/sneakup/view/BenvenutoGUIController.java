@@ -3,6 +3,7 @@ package com.sneakup.view;
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.dao.db.ScarpaDAOJDBC;
 import com.sneakup.model.domain.Scarpa;
+import com.sneakup.model.Sessione; // Assicurati di aver creato la classe Sessione
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
@@ -31,18 +32,59 @@ public class BenvenutoGUIController {
     @FXML private Region barraAnimata;
     @FXML private TextField searchField;
     @FXML private Button btnClearSearch;
-    @FXML private Button btnSearch; // Assicurati di aver messo fx:id="btnSearch" nel FXML
+    @FXML private Button btnSearch;
+
+    // Riferimento al bottone Login in alto a destra
+    @FXML private Button btnLoginTop;
 
     private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
 
     @FXML
     public void initialize() {
-        // Listener per mostrare/nascondere la X dinamicamente
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            boolean showX = !newValue.trim().isEmpty();
-            btnClearSearch.setVisible(showX);
-            btnClearSearch.setManaged(showX);
-        });
+        // 1. Listener per mostrare/nascondere la X dinamicamente nella ricerca
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                boolean showX = !newValue.trim().isEmpty();
+                if (btnClearSearch != null) {
+                    btnClearSearch.setVisible(showX);
+                    btnClearSearch.setManaged(showX);
+                }
+            });
+        }
+
+        // 2. LOGICA SESSIONE: Controlla se l'utente è già loggato
+        if (Sessione.getInstance().isLoggato()) {
+            String nome = Sessione.getInstance().getUsername();
+
+            // Cambia il testo del bottone Login
+            if (btnLoginTop != null) {
+                btnLoginTop.setText("Ciao, " + nome);
+
+                // Cambia lo stile: togliamo il bordo per farlo sembrare un saluto
+                btnLoginTop.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-cursor: hand;");
+
+                // Se clicca sul nome, esegue il Logout invece di andare al login
+                btnLoginTop.setOnAction(event -> handleLogout(event));
+            }
+        }
+    }
+
+    // Gestione Logout
+    private void handleLogout(ActionEvent event) {
+        Sessione.getInstance().logout();
+        mostraInfo("Disconnessione", "Logout effettuato con successo.");
+
+        // Ricarica la pagina corrente per ripristinare il tasto "Login"
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setMaximized(true);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // ==========================================
@@ -52,7 +94,6 @@ public class BenvenutoGUIController {
     @FXML
     private void handleCerca(ActionEvent event) {
         // --- ANIMAZIONE LEGGERA AL CLICK (Effetto pressione) ---
-        // Se l'evento viene dal bottone, lo animiamo
         if (event.getSource() instanceof Button) {
             applicaEffettoPressione((Button) event.getSource());
         }
@@ -86,14 +127,11 @@ public class BenvenutoGUIController {
 
     @FXML
     private void handlePulisciRicerca(ActionEvent event) {
-        // Animazione anche sulla X quando cliccata
         applicaEffettoPressione(btnClearSearch);
-
         searchField.setText("");
         searchField.requestFocus();
     }
 
-    // Metodo helper per l'animazione di pressione (Scale 1.0 -> 0.9 -> 1.0)
     private void applicaEffettoPressione(Button btn) {
         ScaleTransition st = new ScaleTransition(Duration.millis(100), btn);
         st.setFromX(1.0);
@@ -209,8 +247,12 @@ public class BenvenutoGUIController {
 
     @FXML
     private void handlePreferiti(ActionEvent event) {
-        mostraInfo("Area Riservata", "Effettua il Login per i Preferiti.");
-        handleLoginGenerico(event);
+        if (Sessione.getInstance().isLoggato()) {
+            mostraInfo("Preferiti", "Ecco i tuoi prodotti salvati " + Sessione.getInstance().getUsername());
+        } else {
+            mostraInfo("Area Riservata", "Effettua il Login per i Preferiti.");
+            handleLoginGenerico(event);
+        }
     }
 
     @FXML
@@ -239,6 +281,4 @@ public class BenvenutoGUIController {
         alert.setContentText(msg);
         alert.showAndWait();
     }
-
-
 }

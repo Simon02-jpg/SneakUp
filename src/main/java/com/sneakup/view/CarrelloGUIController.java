@@ -13,7 +13,7 @@ import javafx.scene.control.TextInputDialog;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.List; // FONDAMENTALE
+import java.util.List;
 
 // IMPORT MODELLO E DOMAIN
 import com.sneakup.model.domain.Carrello;
@@ -67,8 +67,7 @@ public class CarrelloGUIController {
             String indirizzo = result.get();
 
             try {
-                // 3. Creazione oggetto Ordine (usando il tuo costruttore specifico)
-                // Costruttore: Ordine(id, listaScarpe, totale, indirizzo)
+                // 3. Creazione oggetto Ordine
                 List<Scarpa> scarpeDaComprare = carrello.getScarpe();
                 double totale = carrello.getTotale();
 
@@ -79,14 +78,12 @@ public class CarrelloGUIController {
                 ordineDAO.salvaOrdine(nuovoOrdine);
 
                 // 5. Gestione Notifica (Observer)
-                // Registriamo il venditore come osservatore per questo acquisto
                 VenditoreNotifiche notificatore = new VenditoreNotifiche("Store Centrale");
                 carrello.attach(notificatore);
 
-                // 6. Svuota il carrello e NOTIFICA (passando l'ordine creato)
+                // 6. Svuota il carrello e NOTIFICA
                 carrello.svuota(nuovoOrdine);
 
-                // Rimuoviamo l'osservatore dopo la notifica per pulizia
                 carrello.detach(notificatore);
 
                 mostraAlert(Alert.AlertType.INFORMATION, "Successo", "Ordine effettuato! Il venditore è stato notificato.");
@@ -111,15 +108,17 @@ public class CarrelloGUIController {
     @FXML
     private void tornaHome(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/HomeCliente.fxml"));
+            // MODIFICA QUI: Puntiamo a Benvenuto.fxml invece di HomeCliente
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
             Parent root = loader.load();
 
-            // Passiamo il carrello (ora vuoto) alla home
-            HomeClienteGUIController controller = loader.getController();
-            controller.setCarrello(this.carrello);
+            // BenvenutoGUIController gestisce la sessione da solo, non serve passargli il carrello manualmente
+            // BenvenutoGUIController controller = loader.getController();
 
             Stage stage = (Stage) listaCarrello.getScene().getWindow();
             stage.setScene(new Scene(root));
+            stage.setMaximized(false); // Fix refresh grafico
+            stage.setMaximized(true);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

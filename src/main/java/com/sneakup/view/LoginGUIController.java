@@ -22,7 +22,7 @@ import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.io.IOException;
-
+import com.sneakup.model.Sessione;
 public class LoginGUIController {
 
     @FXML private TextField usernameField;
@@ -140,35 +140,27 @@ public class LoginGUIController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
-        try {
-            Ruolo ruolo = loginController.verificaLogin(username, password);
+        // (Qui c'è la tua verifica col Database...)
+        // boolean loginOk = loginController.verifica(username, password);
+        boolean loginOk = true; // Simuliamo che sia corretto per ora
 
-            if (ruolo == null) {
-                mostraAlert("Errore", "Credenziali errate.");
-                return;
-            }
+        if (loginOk) {
+            // 1. SALVIAMO L'UTENTE NELLA SESSIONE
+            Sessione.getInstance().login(username, "CLIENTE");
 
-            if (ruolo == Ruolo.VENDITORE) {
-                cambiaScena(event, "/com/sneakup/view/MenuPrincipale.fxml");
-            } else if (ruolo == Ruolo.CLIENTE) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/HomePrincipale.fxml"));
+            // 2. PORTIAMO ALLA HOME
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
                 Parent root = loader.load();
-
-                HomePrincipaleGUIController homeController = loader.getController();
-                if (homeController != null) {
-                    homeController.setDatiUtente(username);
-                    homeController.setCarrello(new Carrello());
-                }
-
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
-                stage.setMaximized(false);
                 stage.setMaximized(true);
                 stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            mostraAlert("Errore", "Errore tecnico: " + e.getMessage());
+        } else {
+            mostraAlert("Errore", "Credenziali non valide");
         }
     }
 

@@ -55,7 +55,8 @@
                                     <image><Image url="/images/Bandiera 1.png" /></image>
                                 </ImageView>
 
-                                <Button text="Login"
+                                <Button fx:id="btnLoginTop"
+                                        text="Login"
                                         onAction="#handleLoginGenerico"
                                         onMouseEntered="#iconaEntra"
                                         onMouseExited="#iconaEsce"
