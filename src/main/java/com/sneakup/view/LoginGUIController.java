@@ -154,7 +154,12 @@ public class LoginGUIController {
                 Parent root = loader.load();
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
-                stage.setMaximized(true);
+
+                // --- TRUCCO SCHERMO INTERO ---
+                stage.setMaximized(false); // Prima disattiva
+                stage.setMaximized(true);  // Poi riattiva per forzare il ricalcolo
+                // -----------------------------
+
                 stage.show();
             } catch (IOException e) {
                 e.printStackTrace();

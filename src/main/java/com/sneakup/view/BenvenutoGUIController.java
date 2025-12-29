@@ -3,7 +3,7 @@ package com.sneakup.view;
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.dao.db.ScarpaDAOJDBC;
 import com.sneakup.model.domain.Scarpa;
-import com.sneakup.model.Sessione; // Assicurati di aver creato la classe Sessione
+import com.sneakup.model.Sessione;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
@@ -33,15 +33,13 @@ public class BenvenutoGUIController {
     @FXML private TextField searchField;
     @FXML private Button btnClearSearch;
     @FXML private Button btnSearch;
-
-    // Riferimento al bottone Login in alto a destra
     @FXML private Button btnLoginTop;
 
     private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
 
     @FXML
     public void initialize() {
-        // 1. Listener per mostrare/nascondere la X dinamicamente nella ricerca
+        // 1. Gestione Ricerca (X che appare/scompare)
         if (searchField != null) {
             searchField.textProperty().addListener((observable, oldValue, newValue) -> {
                 boolean showX = !newValue.trim().isEmpty();
@@ -52,39 +50,44 @@ public class BenvenutoGUIController {
             });
         }
 
-        // 2. LOGICA SESSIONE: Controlla se l'utente è già loggato
+        // 2. CONTROLLO SESSIONE: Se loggato, cambia il tasto Login
         if (Sessione.getInstance().isLoggato()) {
             String nome = Sessione.getInstance().getUsername();
 
-            // Cambia il testo del bottone Login
             if (btnLoginTop != null) {
                 btnLoginTop.setText("Ciao, " + nome);
-
-                // Cambia lo stile: togliamo il bordo per farlo sembrare un saluto
                 btnLoginTop.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-cursor: hand;");
 
-                // Se clicca sul nome, esegue il Logout invece di andare al login
-                btnLoginTop.setOnAction(event -> handleLogout(event));
+                // --- PUNTO CRUCIALE: Apri Area Personale invece di Logout ---
+                btnLoginTop.setOnAction(event -> apriAreaPersonale(event));
             }
         }
     }
 
-    // Gestione Logout
-    private void handleLogout(ActionEvent event) {
-        Sessione.getInstance().logout();
-        mostraInfo("Disconnessione", "Logout effettuato con successo.");
-
-        // Ricarica la pagina corrente per ripristinare il tasto "Login"
+    // --- NUOVO METODO: Apre la pagina dell'Area Personale ---
+    private void apriAreaPersonale(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/AreaPersonale.fxml"));
             Parent root = loader.load();
+
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
+
+            // Fix Schermo Intero
+            stage.setMaximized(false);
             stage.setMaximized(true);
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
+            mostraInfo("Errore", "Impossibile caricare l'Area Personale.");
         }
+    }
+
+    // --- METODO DISCONNESSIONE (Usato dall'Area Personale, non qui) ---
+    private void handleLogout(ActionEvent event) {
+        Sessione.getInstance().logout();
+        mostraInfo("Disconnessione", "Logout effettuato con successo.");
+        handleReloadHome();
     }
 
     // ==========================================
@@ -93,7 +96,6 @@ public class BenvenutoGUIController {
 
     @FXML
     private void handleCerca(ActionEvent event) {
-        // --- ANIMAZIONE LEGGERA AL CLICK (Effetto pressione) ---
         if (event.getSource() instanceof Button) {
             applicaEffettoPressione((Button) event.getSource());
         }
@@ -144,7 +146,7 @@ public class BenvenutoGUIController {
     }
 
     // ==========================================
-    //        ANIMAZIONE BARRA BIANCA (MENU)
+    //          NAVIGAZIONE E MENU
     // ==========================================
 
     @FXML
@@ -174,40 +176,6 @@ public class BenvenutoGUIController {
         ft.play();
     }
 
-    // ==========================================
-    //      ANIMAZIONE ZOOM E OMBRA (BRAND)
-    // ==========================================
-
-    @FXML
-    private void animazioneEntra(MouseEvent event) {
-        Button btn = (Button) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
-        st.setToX(1.1);
-        st.setToY(1.1);
-        st.play();
-
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.4));
-        shadow.setRadius(30);
-        shadow.setOffsetY(10);
-        btn.setEffect(shadow);
-    }
-
-    @FXML
-    private void animazioneEsce(MouseEvent event) {
-        Button btn = (Button) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
-        st.setToX(1.0);
-        st.setToY(1.0);
-        st.play();
-
-        DropShadow shadow = new DropShadow();
-        shadow.setColor(Color.rgb(0, 0, 0, 0.3));
-        shadow.setRadius(10);
-        shadow.setOffsetY(5);
-        btn.setEffect(shadow);
-    }
-
     @FXML
     private void iconaEntra(MouseEvent event) {
         Node nodo = (Node) event.getSource();
@@ -226,13 +194,48 @@ public class BenvenutoGUIController {
         st.play();
     }
 
-    // ==========================================
-    //          NAVIGAZIONE E MENU
-    // ==========================================
+    // Altre animazioni brand
+    @FXML
+    private void animazioneEntra(MouseEvent event) {
+        Button btn = (Button) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
+        st.setToX(1.1);
+        st.setToY(1.1);
+        st.play();
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.4));
+        shadow.setRadius(30);
+        shadow.setOffsetY(10);
+        btn.setEffect(shadow);
+    }
+
+    @FXML
+    private void animazioneEsce(MouseEvent event) {
+        Button btn = (Button) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
+        st.setToX(1.0);
+        st.setToY(1.0);
+        st.play();
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.3));
+        shadow.setRadius(10);
+        shadow.setOffsetY(5);
+        btn.setEffect(shadow);
+    }
 
     @FXML
     private void handleReloadHome() {
-        searchField.setText("");
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) searchField.getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setMaximized(true);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sneakup.view.AreaPersonaleGUIController">
+    <children>
+
+        <VBox style="-fx-background-color: #ff0000;">
+            <children>
+                <HBox alignment="CENTER_LEFT" prefHeight="80.0" style="-fx-padding: 0 30 0 30;">
+                    <children>
+                        <HBox alignment="CENTER_LEFT" onMouseClicked="#handleReloadHome" spacing="2.0" style="-fx-cursor: hand;">
+                            <children>
+                                <Label text="Sneak" textFill="WHITE"><font><Font name="System Bold" size="28.0" /></font></Label>
+                                <Label text="Up" textFill="BLACK"><font><Font name="System Bold" size="28.0" /></font></Label>
+                            </children>
+                        </HBox>
+
+                        <Region HBox.hgrow="ALWAYS" />
+
+                        <HBox alignment="CENTER" spacing="10.0" onMouseExited="#nascondiBarra">
+                            <children>
+                                <Button text="Home" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra"
+                                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
+
+                                <Button text="Carrello" onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra"
+                                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
+
+                                <Button text="Stato ordine" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra"
+                                        style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
+                            </children>
+                        </HBox>
+
+                        <Region HBox.hgrow="ALWAYS" />
+
+                        <HBox alignment="CENTER" spacing="20.0">
+                            <children>
+                                <ImageView fitHeight="50.0" fitWidth="70.0" pickOnBounds="true" preserveRatio="true">
+                                    <image><Image url="/images/Bandiera 1.png" /></image>
+                                </ImageView>
+
+                                <Button fx:id="btnUserTop" text="Ciao, Cliente"
+                                        style="-fx-background-color: transparent;
+                                               -fx-text-fill: white;
+                                               -fx-font-weight: bold;
+                                               -fx-font-size: 16;
+                                               -fx-cursor: default;" />
+                            </children>
+                        </HBox>
+                    </children>
+                </HBox>
+
+                <Pane prefHeight="5.0" style="-fx-background-color: #ff0000;">
+                    <children>
+                        <Region fx:id="barraAnimata" layoutX="0" opacity="0.0" prefHeight="4.0" prefWidth="60.0" style="-fx-background-color: white;" />
+                    </children>
+                </Pane>
+            </children>
+        </VBox>
+        <VBox alignment="CENTER" spacing="40.0" VBox.vgrow="ALWAYS">
+            <padding><Insets bottom="50" left="50" right="50" top="50" /></padding>
+            <children>
+                <Label text="AREA PERSONALE" textFill="#222222">
+                    <font><Font name="System Bold" size="36.0" /></font>
+                </Label>
+
+                <HBox alignment="CENTER" spacing="40.0">
+                    <Button onAction="#handleIMieiOrdini" prefHeight="180.0" prefWidth="280.0"
+                            style="-fx-background-color: white; -fx-border-color: #eeeeee; -fx-border-radius: 15; -fx-background-radius: 15; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);"
+                            onMouseEntered="#animazioneEntraCard" onMouseExited="#animazioneEsceCard">
+                        <graphic>
+                            <VBox alignment="CENTER" spacing="15.0">
+                                <Label text="📦" textFill="#ff0000"><font><Font size="48.0" /></font></Label>
+                                <Label text="I MIEI ORDINI" textFill="#333333"><font><Font name="System Bold" size="20.0" /></font></Label>
+                            </VBox>
+                        </graphic>
+                    </Button>
+
+                    <Button onAction="#handleIMieiDati" prefHeight="180.0" prefWidth="280.0"
+                            style="-fx-background-color: white; -fx-border-color: #eeeeee; -fx-border-radius: 15; -fx-background-radius: 15; -fx-cursor: hand; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);"
+                            onMouseEntered="#animazioneEntraCard" onMouseExited="#animazioneEsceCard">
+                        <graphic>
+                            <VBox alignment="CENTER" spacing="15.0">
+                                <Label text="👤" textFill="#ff0000"><font><Font size="48.0" /></font></Label>
+                                <Label text="I MIEI DATI" textFill="#333333"><font><Font name="System Bold" size="20.0" /></font></Label>
+                            </VBox>
+                        </graphic>
+                    </Button>
+                </HBox>
+
+                <Button onAction="#handleLogout" prefHeight="50.0" prefWidth="200.0" text="ESCI"
+                        onMouseEntered="#animazioneEntraCard" onMouseExited="#animazioneEsceCard"
+                        style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16; -fx-background-radius: 30; -fx-cursor: hand;">
+                    <VBox.margin><Insets top="20.0" /></VBox.margin>
+                </Button>
+            </children>
+        </VBox>
+    </children>
+</VBox>
