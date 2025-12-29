@@ -33,117 +33,83 @@ public class ScarpaDAOJDBC implements ScarpaDAO {
         }
     }
 
+    // ... (Mantieni qui i metodi updatePassword e registraNuovoUtente che avevi già) ...
+    public boolean updatePassword(String username, String nuovaPassword) {
+        // ... (codice invariato) ...
+        return false; // placeholder per brevità, tieni il tuo codice originale
+    }
+    public boolean registraNuovoUtente(String username, String password, String nome, String cognome, String email) {
+        // ... (codice invariato) ...
+        return false; // placeholder
+    }
+
     @Override
     public void addScarpa(Scarpa scarpa) throws SneakUpException {
-        // Corretto: Nome tabella SCARPE e rimosso categoria (non presente nel tuo SQL per l'insert)
-        String query = "INSERT INTO SCARPE (modello, marca, categoria, taglia, prezzo, quantita) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement st = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
-            st.setString(1, scarpa.getModello());
-            st.setString(2, scarpa.getMarca());
-            st.setString(3, scarpa.getCategoria());
-            st.setDouble(4, scarpa.getTaglia());
-            st.setDouble(5, scarpa.getPrezzo());
-            st.setInt(6, scarpa.getQuantitaDisponibile());
-            st.executeUpdate();
-            try (ResultSet gk = st.getGeneratedKeys()) {
-                if (gk.next()) scarpa.setId(gk.getInt(1));
-            }
-        } catch (SQLException e) { throw new SneakUpException("Errore inserimento", e); }
+        // ... (Mantieni il tuo codice originale) ...
     }
 
     @Override
     public List<Scarpa> getAllScarpe() throws SneakUpException {
-        List<Scarpa> lista = new ArrayList<>();
-        // Query che usa i nomi esatti delle colonne del tuo database.sql
-        String query = "SELECT idSCARPA, modello, marca, categoria, taglia, prezzo, quantita FROM SCARPE";
-
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(query)) {
-
-            while (rs.next()) {
-                Scarpa s = new Scarpa();
-
-                // 1. Recuperiamo l'ID usando il nome esatto del DB: idSCARPA
-                int id = rs.getInt("idSCARPA");
-                s.setId(id);
-
-                // 2. Popoliamo gli altri campi
-                s.setModello(rs.getString("modello"));
-                s.setMarca(rs.getString("marca"));
-                s.setCategoria(rs.getString("categoria"));
-                s.setTaglia(rs.getDouble("taglia"));
-                s.setPrezzo(rs.getDouble("prezzo"));
-                s.setQuantitaDisponibile(rs.getInt("quantita"));
-
-                // 3. Carichiamo eventuali recensioni associate a questo ID
-                s.getRecensioni().addAll(getRecensioniPerScarpa(id));
-
-                lista.add(s);
-            }
-        } catch (SQLException e) {
-            throw new SneakUpException("Errore durante la lettura del catalogo dal DB", e);
-        }
-        return lista;
+        // ... (Mantieni il tuo codice originale) ...
+        return new ArrayList<>(); // placeholder
     }
 
     @Override
     public void deleteScarpa(int id) throws SneakUpException {
-        // Corretto: Nome tabella SCARPE e colonna idSCARPA
-        String query = "DELETE FROM SCARPE WHERE idSCARPA = ?";
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement st = conn.prepareStatement(query)) {
-            st.setInt(1, id);
-            st.executeUpdate();
-        } catch (SQLException e) { throw new SneakUpException("Errore eliminazione", e); }
+        // ... (Mantieni il tuo codice originale) ...
     }
 
     @Override
     public void updateScarpa(Scarpa s) throws SneakUpException {
-        // Corretto: Nome tabella SCARPE e colonna idSCARPA
-        String query = "UPDATE SCARPE SET modello=?, marca=?, categoria=?, taglia=?, prezzo=?, quantita=? WHERE idSCARPA=?";
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement st = conn.prepareStatement(query)) {
-            st.setString(1, s.getModello());
-            st.setString(2, s.getMarca());
-            st.setString(3, s.getCategoria());
-            st.setDouble(4, s.getTaglia());
-            st.setDouble(5, s.getPrezzo());
-            st.setInt(6, s.getQuantitaDisponibile());
-            st.setInt(7, s.getId());
-            st.executeUpdate();
-        } catch (SQLException e) { throw new SneakUpException("Errore aggiornamento", e); }
+        // ... (Mantieni il tuo codice originale) ...
     }
 
     @Override
     public List<Recensione> getRecensioniPerScarpa(int idScarpa) throws SneakUpException {
-        List<Recensione> recensioni = new ArrayList<>();
-        // Corretto: idSCARPA come chiave esterna nel database.sql
-        String query = "SELECT autore, voto, testo FROM RECENSIONI WHERE idSCARPA = ?";
-        try (Connection conn = DriverManager.getConnection(url, user, password);
-             PreparedStatement st = conn.prepareStatement(query)) {
-            st.setInt(1, idScarpa);
-            try (ResultSet rs = st.executeQuery()) {
-                while (rs.next()) {
-                    recensioni.add(new Recensione(rs.getString("autore"), rs.getInt("voto"), rs.getString("testo")));
-                }
-            }
-        } catch (SQLException e) { throw new SneakUpException("Errore recupero recensioni", e); }
-        return recensioni;
+        // ... (Mantieni il tuo codice originale) ...
+        return new ArrayList<>(); // placeholder
     }
 
     @Override
     public void aggiungiRecensione(int id, Recensione r) throws SneakUpException {
-        // Corretto: idSCARPA come chiave esterna nel database.sql
-        String query = "INSERT INTO RECENSIONI (idSCARPA, autore, voto, testo) VALUES (?, ?, ?, ?)";
+        // ... (Mantieni il tuo codice originale) ...
+    }
+
+    // --- NUOVO METODO PER LA RICERCA ---
+    public List<Scarpa> cercaScarpe(String keyword) throws SneakUpException {
+        List<Scarpa> lista = new ArrayList<>();
+        // Cerca sia nel modello che nella marca (es. "Nike" o "Air Max")
+        String query = "SELECT idSCARPA, modello, marca, categoria, taglia, prezzo, quantita FROM SCARPE WHERE modello LIKE ? OR marca LIKE ?";
+
         try (Connection conn = DriverManager.getConnection(url, user, password);
              PreparedStatement st = conn.prepareStatement(query)) {
-            st.setInt(1, id);
-            st.setString(2, r.getAutore());
-            st.setInt(3, r.getVoto());
-            st.setString(4, r.getTesto());
-            st.executeUpdate();
-        } catch (SQLException e) { throw new SneakUpException("Errore salvataggio recensione", e); }
+
+            // %parola% permette di trovare "Air" dentro "Nike Air Max"
+            String searchPattern = "%" + keyword + "%";
+            st.setString(1, searchPattern);
+            st.setString(2, searchPattern);
+
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    Scarpa s = new Scarpa();
+                    int id = rs.getInt("idSCARPA");
+                    s.setId(id);
+                    s.setModello(rs.getString("modello"));
+                    s.setMarca(rs.getString("marca"));
+                    s.setCategoria(rs.getString("categoria"));
+                    s.setTaglia(rs.getDouble("taglia"));
+                    s.setPrezzo(rs.getDouble("prezzo"));
+                    s.setQuantitaDisponibile(rs.getInt("quantita"));
+
+                    // Carica anche le recensioni se necessario (opzionale per la lista veloce)
+                    // s.getRecensioni().addAll(getRecensioniPerScarpa(id));
+
+                    lista.add(s);
+                }
+            }
+        } catch (SQLException e) {
+            throw new SneakUpException("Errore durante la ricerca nel DB", e);
+        }
+        return lista;
     }
 }

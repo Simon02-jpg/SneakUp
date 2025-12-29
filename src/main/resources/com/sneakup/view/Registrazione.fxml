@@ -6,7 +6,7 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="TOP_CENTER" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sneakup.view.LoginGUIController">
+<VBox alignment="TOP_CENTER" prefHeight="800.0" prefWidth="1200.0" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sneakup.view.RegistrazioneGUIController">
     <children>
 
         <VBox style="-fx-background-color: #ff0000;">
@@ -24,16 +24,16 @@
 
                         <HBox alignment="CENTER" spacing="10.0" onMouseExited="#nascondiBarra">
                             <children>
-                                <Button fx:id="btnHome" text="Home" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra"
+                                <Button text="Home" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra"
                                         style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
 
-                                <Button fx:id="btnCarrello" text="Carrello" onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra"
+                                <Button text="Carrello" onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra"
                                         style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
 
-                                <Button fx:id="btnStato" text="Stato ordine" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra"
+                                <Button text="Stato ordine" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra"
                                         style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
 
-                                <Button fx:id="btnPreferiti" text="Preferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra"
+                                <Button text="Preferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra"
                                         style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18; -fx-cursor: hand;" />
                             </children>
                         </HBox>
@@ -77,22 +77,26 @@
 
         <VBox alignment="CENTER" spacing="30.0" VBox.vgrow="ALWAYS">
             <children>
-                <Label text="ACCEDI AL TUO ACCOUNT" textFill="#222222">
+                <Label text="CREA UN ACCOUNT" textFill="#222222">
                     <font><Font name="System Bold" size="24.0" /></font>
                 </Label>
 
                 <VBox maxWidth="500.0" spacing="15.0" style="-fx-background-color: white; -fx-padding: 40; -fx-background-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 20, 0, 0, 10);">
                     <children>
                         <Label text="Username" style="-fx-font-weight: bold;" />
-                        <TextField fx:id="usernameField" promptText="Inserisci username" style="-fx-pref-height: 45; -fx-background-radius: 8;" />
+                        <TextField fx:id="usernameField" promptText="Scegli un username" style="-fx-pref-height: 45; -fx-background-radius: 8;" />
+
+                        <Label text="Email" style="-fx-font-weight: bold;" />
+                        <TextField fx:id="emailField" promptText="latua@email.com" style="-fx-pref-height: 45; -fx-background-radius: 8;" />
 
                         <Label text="Password" style="-fx-font-weight: bold;" />
-                        <PasswordField fx:id="passwordField" promptText="Inserisci Password" style="-fx-pref-height: 45; -fx-background-radius: 8;" />
+                        <PasswordField fx:id="passwordField" promptText="Crea una password" style="-fx-pref-height: 45; -fx-background-radius: 8;" />
 
-                        <Label text="hai dimenticato la password?" textFill="RED" style="-fx-cursor: hand;" onMouseClicked="#apriRecuperoPassword" />
+                        <Label text="Conferma Password" style="-fx-font-weight: bold;" />
+                        <PasswordField fx:id="confermaPasswordField" promptText="Ripeti la password" style="-fx-pref-height: 45; -fx-background-radius: 8;" />
 
-                        <Button text="ACCEDI"
-                                onAction="#handleLogin"
+                        <Button text="REGISTRATI"
+                                onAction="#handleRegistrazione"
                                 onMouseEntered="#animazioneEntraBottone"
                                 onMouseExited="#animazioneEsceBottone"
                                 maxWidth="Infinity"
@@ -100,24 +104,13 @@
                             <VBox.margin><Insets top="10.0" /></VBox.margin>
                         </Button>
 
-                        <Button text="Accedi con Google"
+                        <Button text="Annulla"
+                                onAction="#tornaAlLogin"
                                 onMouseEntered="#animazioneEntraBottone"
                                 onMouseExited="#animazioneEsceBottone"
                                 maxWidth="Infinity"
-                                style="-fx-background-color: white; -fx-border-color: #dddddd; -fx-border-radius: 8; -fx-text-fill: #444444; -fx-font-size: 14; -fx-pref-height: 45; -fx-background-radius: 8; -fx-cursor: hand;">
-                            <graphic>
-                                <ImageView fitHeight="18" fitWidth="18" preserveRatio="true">
-                                </ImageView>
-                            </graphic>
+                                style="-fx-background-color: white; -fx-border-color: #dddddd; -fx-border-radius: 8; -fx-text-fill: #555555; -fx-font-weight: bold; -fx-font-size: 14; -fx-pref-height: 45; -fx-background-radius: 8; -fx-cursor: hand;">
                         </Button>
-
-                        <HBox alignment="CENTER" spacing="5.0">
-                            <children>
-                                <Label text="non hai un account?" textFill="BLACK" />
-                                <Label text="registrati ora" textFill="RED" style="-fx-font-weight: bold; -fx-cursor: hand;" onMouseClicked="#apriRegistrazione" />
-                            </children>
-                            <VBox.margin><Insets top="15.0" /></VBox.margin>
-                        </HBox>
                     </children>
                 </VBox>
             </children>

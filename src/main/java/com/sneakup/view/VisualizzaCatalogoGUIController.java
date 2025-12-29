@@ -4,10 +4,8 @@ import com.sneakup.controller.VisualizzaScarpeController;
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.domain.Scarpa;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -15,8 +13,6 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 import com.sneakup.model.domain.Recensione; // FONDAMENTALE
 import javafx.scene.control.TextArea;
-import javafx.scene.control.cell.PropertyValueFactory;
-import java.util.List;
 
 public class VisualizzaCatalogoGUIController {
 
@@ -154,7 +150,7 @@ public class VisualizzaCatalogoGUIController {
     @FXML
     private void tornaAlMenu(javafx.event.ActionEvent event) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/sneakup/view/MenuPrincipale.fxml"));
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/sneakup/view/HomePrincipale.fxml"));
             javafx.scene.Parent root = loader.load();
             javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
             stage.setScene(new javafx.scene.Scene(root));

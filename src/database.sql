@@ -3,17 +3,20 @@ DROP DATABASE IF EXISTS sneakup_db;
 CREATE DATABASE sneakup_db DEFAULT CHARACTER SET = 'utf8mb4';
 USE sneakup_db;
 
--- 2. Tabella LOGIN (per gestire account personali - User Story 3)
-DROP TABLE IF EXISTS `LOGIN`;
+-- 2. Tabella LOGIN (Aggiornata con vincolo UNIQUE)
 CREATE TABLE IF NOT EXISTS `LOGIN` (
   `ID` INT NOT NULL AUTO_INCREMENT,
   `USERNAME` VARCHAR(45) NOT NULL,
   `PASSWORD` VARCHAR(45) NOT NULL,
-  `ROLE` INT NOT NULL DEFAULT 2, -- 0=Admin, 1=Gestore Vendite, 2=Cliente
-  PRIMARY KEY (`ID`)
+  `ROLE` INT NOT NULL DEFAULT 2,
+  `NOME` VARCHAR(50) DEFAULT NULL,
+  `COGNOME` VARCHAR(50) DEFAULT NULL,
+  `EMAIL` VARCHAR(100) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `USERNAME_UNIQUE` (`USERNAME` ASC), -- Username unico
+  UNIQUE INDEX `EMAIL_UNIQUE` (`EMAIL` ASC)       -- Email unica (opzionale ma consigliato)
 );
-
--- 3. Tabella SCARPE (Catalogo - Requisito Funzionale 1 e 2)
+-- 3. Tabella SCARPE (Catalogo)
 DROP TABLE IF EXISTS `SCARPE`;
 CREATE TABLE IF NOT EXISTS `SCARPE` (
   `idSCARPA` INT NOT NULL AUTO_INCREMENT,
@@ -27,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `SCARPE` (
   PRIMARY KEY (`idSCARPA`)
 );
 
--- 4. Tabella RECENSIONI (User Story 2)
+-- 4. Tabella RECENSIONI
 DROP TABLE IF EXISTS `RECENSIONI`;
 CREATE TABLE IF NOT EXISTS `RECENSIONI` (
   `idRECENSIONE` INT NOT NULL AUTO_INCREMENT,
@@ -39,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `RECENSIONI` (
   FOREIGN KEY (`idSCARPA`) REFERENCES `SCARPE`(`idSCARPA`) ON DELETE CASCADE
 );
 
--- 5. Tabella ORDINI (Use Case: Effettua Ordine)
+-- 5. Tabella ORDINI
 DROP TABLE IF EXISTS `ORDINI`;
 CREATE TABLE IF NOT EXISTS `ORDINI` (
   `idORDINE` INT NOT NULL AUTO_INCREMENT,
@@ -52,12 +55,15 @@ CREATE TABLE IF NOT EXISTS `ORDINI` (
 );
 
 -- -----------------------------------------------------
--- INSERIMENTO DATI DI ESEMPIO
+-- INSERIMENTO DATI DI ESEMPIO (Aggiornati)
 -- -----------------------------------------------------
 
--- Utenti
-INSERT INTO LOGIN (USERNAME, PASSWORD, ROLE) VALUES ('seller', 'seller', 0);
-INSERT INTO LOGIN (USERNAME, PASSWORD, ROLE) VALUES ('client', 'client', 1);
+-- Utenti di prova (Ora hanno anche nome, cognome ed email)
+INSERT INTO LOGIN (USERNAME, PASSWORD, ROLE, NOME, COGNOME, EMAIL)
+VALUES ('seller', 'seller', 0, 'Admin', 'Principale', 'admin@sneakup.com');
+
+INSERT INTO LOGIN (USERNAME, PASSWORD, ROLE, NOME, COGNOME, EMAIL)
+VALUES ('client', 'client', 1, 'Mario', 'Rossi', 'mario.rossi@email.it');
 
 -- Catalogo Scarpe
 INSERT INTO SCARPE (modello, marca, categoria, taglia, prezzo, quantita, descrizione)

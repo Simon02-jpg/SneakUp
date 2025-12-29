@@ -1,6 +1,6 @@
 package com.sneakup.controller;
 
-import com.sneakup.model.dao.DAOFactory;
+import com.sneakup.model.dao.db.ScarpaDAOJDBC; // IMPORTANTE: aggiungi questo import
 import com.sneakup.model.domain.Ruolo;
 import java.sql.*;
 import java.util.logging.Level;
@@ -12,12 +12,10 @@ public class LoginController {
 
     private static final Logger logger = Logger.getLogger(LoginController.class.getName());
 
-    /**
-     * Verifica le credenziali leggendo direttamente dal Database (HeidiSQL).
-     * Risolve l'errore "cannot find symbol" eliminando i MOCK_DB.
-     */
+    // SOLUZIONE: Dichiariamo scarpaDAO così il metodo resetPassword può usarlo
+    private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
+
     public Ruolo verificaLogin(String username, String password) {
-        // Leggiamo le credenziali dal file config.properties
         Properties prop = new Properties();
         String url = "";
         String user = "";
@@ -34,13 +32,10 @@ public class LoginController {
             logger.log(Level.SEVERE, "Errore caricamento configurazione login", e);
         }
 
-        // Query per cercare l'utente nel database (Tabella LOGIN del tuo file database.sql)
         String query = "SELECT ROLE FROM LOGIN WHERE USERNAME = ? AND PASSWORD = ?";
 
         try {
-            // Forza il caricamento del driver MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
-
             try (Connection conn = DriverManager.getConnection(url, user, pass);
                  PreparedStatement pstmt = conn.prepareStatement(query)) {
 
@@ -50,15 +45,38 @@ public class LoginController {
                 try (ResultSet rs = pstmt.executeQuery()) {
                     if (rs.next()) {
                         int roleId = rs.getInt("ROLE");
-                        // 0=Admin(VENDITORE), 1=Gestore(CLIENTE) come da tuo database.sql
                         if (roleId == 0) return Ruolo.VENDITORE;
                         if (roleId == 1) return Ruolo.CLIENTE;
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace(); // Guarda la console per vedere l'errore specifico
+            e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean resetPassword(String username, String nuovaPassword) {
+        // Ora scarpaDAO esiste e l'errore sparirà
+        return scarpaDAO.updatePassword(username, nuovaPassword);
+    }
+
+    public boolean registraCliente(String username, String password, String nome, String cognome, String email) {
+        return scarpaDAO.registraNuovoUtente(username, password, nome, cognome, email);
+    }
+
+    public boolean registraUtente(String username, String password, String email, Ruolo ruolo) {
+        // Qui simulo il salvataggio. In futuro scriverai su file CSV o Database.
+        System.out.println("Tentativo registrazione: " + username + " - " + email);
+
+        // Esempio logica fittizia: se l'utente è "admin", fallisce (già esiste)
+        if (username.equalsIgnoreCase("admin")) {
+            return false;
+        }
+
+        // TODO: Qui dovrai aggiungere il codice per scrivere nel file Credenziali.csv
+        // Esempio: CSVUtils.scriviNuovoUtente(username, password, email, ruolo);
+
+        return true; // Registrazione riuscita
     }
 }

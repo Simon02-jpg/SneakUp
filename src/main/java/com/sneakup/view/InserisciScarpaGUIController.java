@@ -76,7 +76,7 @@ public class InserisciScarpaGUIController {
     @FXML
     private void tornaAlMenu(javafx.event.ActionEvent event) {
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/sneakup/view/MenuPrincipale.fxml"));
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/sneakup/view/HomePrincipale.fxml"));
             javafx.scene.Parent root = loader.load();
             // Se event è null (chiamato da codice), dobbiamo gestire la scene in altro modo, ma per semplicità assumiamo che la finestra sia aperta
             if (modelloField.getScene() != null) {

@@ -1,61 +1,244 @@
 package com.sneakup.view;
 
+import com.sneakup.exception.SneakUpException;
+import com.sneakup.model.dao.db.ScarpaDAOJDBC;
+import com.sneakup.model.domain.Scarpa;
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
+import java.util.List;
 
 public class BenvenutoGUIController {
 
-    // Gestione click sui Loghi
+    @FXML private Region barraAnimata;
+    @FXML private TextField searchField;
+    @FXML private Button btnClearSearch;
+    @FXML private Button btnSearch; // Assicurati di aver messo fx:id="btnSearch" nel FXML
+
+    private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
+
     @FXML
-    private void handleNike(ActionEvent event) {
-        System.out.println("Scelto brand: Nike");
-        vaiAlLogin(event);
+    public void initialize() {
+        // Listener per mostrare/nascondere la X dinamicamente
+        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+            boolean showX = !newValue.trim().isEmpty();
+            btnClearSearch.setVisible(showX);
+            btnClearSearch.setManaged(showX);
+        });
+    }
+
+    // ==========================================
+    //          LOGICA RICERCA PRODOTTO
+    // ==========================================
+
+    @FXML
+    private void handleCerca(ActionEvent event) {
+        // --- ANIMAZIONE LEGGERA AL CLICK (Effetto pressione) ---
+        // Se l'evento viene dal bottone, lo animiamo
+        if (event.getSource() instanceof Button) {
+            applicaEffettoPressione((Button) event.getSource());
+        }
+
+        String keyword = searchField.getText().trim();
+
+        if (keyword.isEmpty()) {
+            mostraInfo("Attenzione", "Inserisci il nome di una scarpa o una marca.");
+            return;
+        }
+
+        try {
+            List<Scarpa> risultati = scarpaDAO.cercaScarpe(keyword);
+
+            if (risultati.isEmpty()) {
+                mostraInfo("Nessun risultato", "Non abbiamo trovato scarpe per: " + keyword);
+            } else {
+                StringBuilder sb = new StringBuilder("Trovati " + risultati.size() + " prodotti:\n");
+                for (Scarpa s : risultati) {
+                    sb.append("- ").append(s.getMarca()).append(" ").append(s.getModello())
+                            .append(" (€").append(s.getPrezzo()).append(")\n");
+                }
+                mostraInfo("Risultati Ricerca", sb.toString());
+            }
+
+        } catch (SneakUpException e) {
+            e.printStackTrace();
+            mostraInfo("Errore", "Errore di connessione al database.");
+        }
     }
 
     @FXML
-    private void handleAdidas(ActionEvent event) {
-        System.out.println("Scelto brand: Adidas");
-        vaiAlLogin(event);
+    private void handlePulisciRicerca(ActionEvent event) {
+        // Animazione anche sulla X quando cliccata
+        applicaEffettoPressione(btnClearSearch);
+
+        searchField.setText("");
+        searchField.requestFocus();
+    }
+
+    // Metodo helper per l'animazione di pressione (Scale 1.0 -> 0.9 -> 1.0)
+    private void applicaEffettoPressione(Button btn) {
+        ScaleTransition st = new ScaleTransition(Duration.millis(100), btn);
+        st.setFromX(1.0);
+        st.setFromY(1.0);
+        st.setToX(0.9);
+        st.setToY(0.9);
+        st.setAutoReverse(true);
+        st.setCycleCount(2);
+        st.play();
+    }
+
+    // ==========================================
+    //        ANIMAZIONE BARRA BIANCA (MENU)
+    // ==========================================
+
+    @FXML
+    private void mostraEmuoviBarra(MouseEvent event) {
+        Button source = (Button) event.getSource();
+        Bounds buttonBounds = source.localToScene(source.getBoundsInLocal());
+        Bounds barParentBounds = barraAnimata.getParent().localToScene(barraAnimata.getParent().getBoundsInLocal());
+
+        double newX = buttonBounds.getMinX() - barParentBounds.getMinX()
+                + (source.getWidth() / 2) - (barraAnimata.getWidth() / 2);
+
+        if (barraAnimata.getOpacity() < 1) {
+            FadeTransition ft = new FadeTransition(Duration.millis(200), barraAnimata);
+            ft.setToValue(1.0);
+            ft.play();
+        }
+
+        TranslateTransition tt = new TranslateTransition(Duration.millis(200), barraAnimata);
+        tt.setToX(newX);
+        tt.play();
     }
 
     @FXML
-    private void handlePuma(ActionEvent event) {
-        System.out.println("Scelto brand: Puma");
-        vaiAlLogin(event);
+    private void nascondiBarra(MouseEvent event) {
+        FadeTransition ft = new FadeTransition(Duration.millis(300), barraAnimata);
+        ft.setToValue(0.0);
+        ft.play();
     }
 
-    // Gestione click sul Menu in alto e Login
+    // ==========================================
+    //      ANIMAZIONE ZOOM E OMBRA (BRAND)
+    // ==========================================
+
+    @FXML
+    private void animazioneEntra(MouseEvent event) {
+        Button btn = (Button) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
+        st.setToX(1.1);
+        st.setToY(1.1);
+        st.play();
+
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.4));
+        shadow.setRadius(30);
+        shadow.setOffsetY(10);
+        btn.setEffect(shadow);
+    }
+
+    @FXML
+    private void animazioneEsce(MouseEvent event) {
+        Button btn = (Button) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
+        st.setToX(1.0);
+        st.setToY(1.0);
+        st.play();
+
+        DropShadow shadow = new DropShadow();
+        shadow.setColor(Color.rgb(0, 0, 0, 0.3));
+        shadow.setRadius(10);
+        shadow.setOffsetY(5);
+        btn.setEffect(shadow);
+    }
+
+    @FXML
+    private void iconaEntra(MouseEvent event) {
+        Node nodo = (Node) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), nodo);
+        st.setToX(1.15);
+        st.setToY(1.15);
+        st.play();
+    }
+
+    @FXML
+    private void iconaEsce(MouseEvent event) {
+        Node nodo = (Node) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), nodo);
+        st.setToX(1.0);
+        st.setToY(1.0);
+        st.play();
+    }
+
+    // ==========================================
+    //          NAVIGAZIONE E MENU
+    // ==========================================
+
+    @FXML
+    private void handleReloadHome() {
+        searchField.setText("");
+    }
+
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        mostraInfo("Carrello", "Sezione Carrello (Guest).");
+    }
+
+    @FXML
+    private void handleStatoOrdine(ActionEvent event) {
+        mostraInfo("Stato Ordine", "Traccia la spedizione.");
+    }
+
+    @FXML
+    private void handlePreferiti(ActionEvent event) {
+        mostraInfo("Area Riservata", "Effettua il Login per i Preferiti.");
+        handleLoginGenerico(event);
+    }
+
     @FXML
     private void handleLoginGenerico(ActionEvent event) {
-        System.out.println("Navigazione verso Login...");
-        vaiAlLogin(event);
-    }
-
-    // Metodo helper per cambiare scena
-    private void vaiAlLogin(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
             Parent root = loader.load();
-
-            // Verifica che l'evento non sia nullo (può capitare se chiamato da codice)
-            if (event != null && event.getSource() instanceof Node) {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                Scene scene = new Scene(root);
-                stage.setScene(scene);
-                stage.setMaximized(true); // Mantiene schermo intero
-                stage.show();
-            }
-
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.setMaximized(false);
+            stage.setMaximized(true);
+            stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("ERRORE CRITICO: Impossibile caricare Login.fxml. Controlla il percorso.");
         }
     }
+
+    @FXML private void handleNike(ActionEvent event) { System.out.println("Nike selezionato"); }
+    @FXML private void handleAdidas(ActionEvent event) { System.out.println("Adidas selezionato"); }
+    @FXML private void handlePuma(ActionEvent event) { System.out.println("Puma selezionato"); }
+
+    private void mostraInfo(String titolo, String msg) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titolo);
+        alert.setHeaderText(null);
+        alert.setContentText(msg);
+        alert.showAndWait();
+    }
+
+
 }

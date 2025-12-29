@@ -11,7 +11,7 @@
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
     </padding>
 
-    <Label text="SNEAKUP STORE" textFill="#2a2a2a">
+    <Label text="AREA VENDITORE" textFill="#dc3545">
         <font>
             <Font name="System Bold" size="36.0" />
         </font>
@@ -37,7 +37,7 @@
         </font>
     </Button>
 
-    <Button onAction="#esci" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #dc3545; -fx-text-fill: white;" text="ESCI">
+    <Button onAction="#esci" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #6c757d; -fx-text-fill: white;" text="ESCI">
         <font>
             <Font size="14.0" />
         </font>
