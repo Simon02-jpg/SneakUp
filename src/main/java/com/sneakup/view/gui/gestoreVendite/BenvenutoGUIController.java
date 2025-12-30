@@ -1,4 +1,4 @@
-package com.sneakup.view.gui;
+package com.sneakup.view.gui.gestoreVendite;
 
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.dao.db.ScarpaDAOJDBC;

@@ -1,4 +1,4 @@
-package com.sneakup.view.gui;
+package com.sneakup.view.gui.common;
 
 import com.sneakup.controller.LoginController;
 import com.sneakup.model.domain.Ruolo;

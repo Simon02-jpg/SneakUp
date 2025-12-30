@@ -1,8 +1,9 @@
-package com.sneakup.view.gui;
+package com.sneakup.view.gui.cliente;
 
 import com.sneakup.controller.VisualizzaScarpeController;
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.domain.Scarpa;
+import com.sneakup.view.gui.gestoreVendite.InserisciScarpaGUIController;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

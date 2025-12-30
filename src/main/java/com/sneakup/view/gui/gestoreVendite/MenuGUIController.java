@@ -1,4 +1,4 @@
-package com.sneakup.view.gui;
+package com.sneakup.view.gui.gestoreVendite;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
