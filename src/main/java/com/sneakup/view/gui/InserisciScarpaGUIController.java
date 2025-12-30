@@ -1,4 +1,4 @@
-package com.sneakup.view;
+package com.sneakup.view.gui;
 
 import com.sneakup.controller.InserisciScarpaController;
 import com.sneakup.exception.SneakUpException;

@@ -1,4 +1,4 @@
-package com.sneakup.view;
+package com.sneakup.view.gui;
 
 import com.sneakup.model.Sessione;
 import javafx.animation.FadeTransition;

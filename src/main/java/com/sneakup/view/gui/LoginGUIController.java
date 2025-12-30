@@ -1,8 +1,6 @@
-package com.sneakup.view;
+package com.sneakup.view.gui;
 
 import com.sneakup.controller.LoginController;
-import com.sneakup.model.domain.Carrello;
-import com.sneakup.model.domain.Ruolo;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;

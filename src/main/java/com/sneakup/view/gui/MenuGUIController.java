@@ -1,4 +1,4 @@
-package com.sneakup.view;
+package com.sneakup.view.gui;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;

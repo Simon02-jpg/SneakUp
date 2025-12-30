@@ -1,7 +1,6 @@
-package com.sneakup.view;
+package com.sneakup.view.gui;
 
 import com.sneakup.controller.LoginController;
-import com.sneakup.model.domain.Ruolo;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.TranslateTransition;
@@ -22,31 +21,27 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.io.IOException;
 
-public class RegistrazioneGUIController {
+public class RecuperoPasswordGUIController {
 
     @FXML private TextField usernameField;
-    @FXML private TextField emailField;
-    @FXML private PasswordField passwordField;
+    @FXML private PasswordField nuovaPasswordField;
     @FXML private PasswordField confermaPasswordField;
     @FXML private Region barraAnimata;
 
     private final LoginController loginController = new LoginController();
 
-    // --- NAVIGAZIONE HEADER ---
+    // --- NAVIGAZIONE CORRETTA: LOGO/HOME -> BENVENUTO ---
 
     @FXML
     private void handleReloadHome() {
-        // Cliccando il Logo o Home, torniamo alla pagina principale (Benvenuto)
-        vaiA_Benvenuto();
-    }
-
-    private void vaiA_Benvenuto() {
         try {
+            // CARICA LA SCHERMATA BENVENUTO (Home Principale)
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
             Parent root = loader.load();
 
-            // Usa un campo qualsiasi per trovare lo stage
+            // Recupera lo stage usando un elemento della scena (es. usernameField)
             Stage stage = (Stage) usernameField.getScene().getWindow();
+
             stage.setScene(new Scene(root));
 
             // Fix schermo intero
@@ -59,10 +54,11 @@ public class RegistrazioneGUIController {
         }
     }
 
+    // --- ALTRI METODI DI NAVIGAZIONE ---
+
     @FXML
     private void handleLoginGenerico(ActionEvent event) {
-        // L'omino o Annulla portano al Login
-        tornaAlLogin(event);
+        tornaAlLogin(event); // L'icona omino invece va giustamente al Login
     }
 
     @FXML
@@ -87,22 +83,22 @@ public class RegistrazioneGUIController {
         }
     }
 
-    // --- ALERT E MENU ---
-    @FXML private void handleCarrello(ActionEvent event) { mostraInfo("Info", "Torna alla Home per il carrello."); }
-    @FXML private void handleStatoOrdine(ActionEvent event) { mostraInfo("Info", "Torna alla Home per tracciare ordini."); }
-    @FXML private void handlePreferiti(ActionEvent event) { mostraInfo("Info", "Devi accedere per i preferiti."); }
-
-    private void mostraInfo(String t, String m) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        mostraInfo("Info", "Torna alla Home per accedere al carrello.");
     }
 
-    private void mostraAlert(String t, String m) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    @FXML
+    private void handleStatoOrdine(ActionEvent event) {
+        mostraInfo("Info", "Torna alla Home per tracciare un ordine.");
     }
 
-    // --- ANIMAZIONI HEADER E BOTTONI ---
+    @FXML
+    private void handlePreferiti(ActionEvent event) {
+        mostraInfo("Info", "Devi accedere per vedere i preferiti.");
+    }
+
+    // --- ANIMAZIONI HEADER ---
 
     @FXML
     private void mostraEmuoviBarra(MouseEvent event) {
@@ -133,59 +129,76 @@ public class RegistrazioneGUIController {
 
     @FXML
     private void iconaEntra(MouseEvent event) {
-        Node n = (Node) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
-        st.setToX(1.15); st.setToY(1.15); st.play();
+        Node nodo = (Node) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), nodo);
+        st.setToX(1.15);
+        st.setToY(1.15);
+        st.play();
     }
 
     @FXML
     private void iconaEsce(MouseEvent event) {
-        Node n = (Node) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
-        st.setToX(1.0); st.setToY(1.0); st.play();
+        Node nodo = (Node) event.getSource();
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), nodo);
+        st.setToX(1.0);
+        st.setToY(1.0);
+        st.play();
     }
+
+    // --- ANIMAZIONI BOTTONI PAGINA ---
 
     @FXML
     private void animazioneEntraBottone(MouseEvent event) {
         Button btn = (Button) event.getSource();
         ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
-        st.setToX(1.05); st.setToY(1.05); st.play();
+        st.setToX(1.05);
+        st.setToY(1.05);
+        st.play();
     }
 
     @FXML
     private void animazioneEsceBottone(MouseEvent event) {
         Button btn = (Button) event.getSource();
         ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
-        st.setToX(1.0); st.setToY(1.0); st.play();
+        st.setToX(1.0);
+        st.setToY(1.0);
+        st.play();
     }
 
-    // --- LOGICA REGISTRAZIONE ---
+    // --- LOGICA CAMBIO PASSWORD ---
 
     @FXML
-    private void handleRegistrazione(ActionEvent event) {
-        String username = usernameField.getText();
-        String email = emailField.getText();
-        String password = passwordField.getText();
-        String conferma = confermaPasswordField.getText();
+    private void handleCambiaPassword(ActionEvent event) {
+        String user = usernameField.getText();
+        String pass = nuovaPasswordField.getText();
+        String conf = confermaPasswordField.getText();
 
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty() || conferma.isEmpty()) {
-            mostraAlert("Errore", "Compila tutti i campi.");
+        if (user.isEmpty() || pass.isEmpty()) {
+            mostraAlert("Errore", "Inserisci username e password.");
+            return;
+        }
+        if (!pass.equals(conf)) {
+            mostraAlert("Errore", "Le password non coincidono!");
             return;
         }
 
-        if (!password.equals(conferma)) {
-            mostraAlert("Errore", "Le password non coincidono.");
-            return;
-        }
+        boolean rigaAggiornata = loginController.resetPassword(user, pass);
 
-        // --- MODIFICA QUI SOTTO: Ho aggiunto 'email' ---
-        boolean successo = loginController.registraUtente(username, password, email, Ruolo.CLIENTE);
-
-        if (successo) {
-            mostraInfo("Successo", "Registrazione completata! Ora puoi accedere.");
+        if (rigaAggiornata) {
+            mostraInfo("Successo", "Password aggiornata correttamente!");
             tornaAlLogin(event);
         } else {
-            mostraAlert("Errore", "Username già esistente.");
+            mostraAlert("Errore", "Username non trovato.");
         }
+    }
+
+    private void mostraAlert(String t, String m) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    }
+
+    private void mostraInfo(String t, String m) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
     }
 }
