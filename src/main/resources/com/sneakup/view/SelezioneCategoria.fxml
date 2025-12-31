@@ -3,21 +3,17 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.geometry.Insets?>
 
-<BorderPane prefHeight="800.0" prefWidth="1200.0"  stylesheets="@/style.css"
-            xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sneakup.view.gui.cliente.VisualizzaCatalogoGUIController">
+<BorderPane prefHeight="800.0" prefWidth="1200.0" stylesheets="@/style.css" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sneakup.view.gui.cliente.SelezioneCategoriaGUIController">
 
     <top>
         <VBox style="-fx-background-color: #ff0000;">
@@ -30,9 +26,7 @@
                                 <Label text="Up" textFill="BLACK"><font><Font name="System Bold" size="36.0" /></font></Label>
                             </children>
                         </HBox>
-
                         <Region HBox.hgrow="ALWAYS" />
-
                         <HBox alignment="CENTER" onMouseExited="#nascondiBarra" spacing="35.0">
                             <children>
                                 <Button fx:id="btnHome" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Home" />
@@ -41,9 +35,7 @@
                                 <Button fx:id="btnPreferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" />
                             </children>
                         </HBox>
-
                         <Region HBox.hgrow="ALWAYS" />
-
                         <HBox alignment="CENTER" spacing="25.0">
                             <children>
                                 <ImageView fitHeight="45.0" fitWidth="70.0" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
@@ -59,7 +51,6 @@
                         </HBox>
                     </children>
                 </HBox>
-
                 <Pane prefHeight="8.0">
                     <VBox.margin><Insets bottom="5.0" top="-15.0" /></VBox.margin>
                     <children>
@@ -71,41 +62,24 @@
     </top>
 
     <center>
-        <VBox alignment="TOP_CENTER" spacing="40.0" style="-fx-background-color: white;">
-            <padding><Insets bottom="40" left="40" right="40" top="60" /></padding>
+        <VBox alignment="TOP_CENTER" spacing="30.0">
+            <padding><Insets bottom="30" left="50" right="50" top="30" /></padding>
             <children>
-                <VBox alignment="CENTER" spacing="5.0">
-                    <children>
-                        <Label fx:id="lblBrandTitolo" text="NIKE" textFill="BLACK">
-                            <font><Font name="System Bold" size="64.0" /></font>
-                        </Label>
-                        <Label text="Scegli la tua categoria" textFill="#666666">
-                            <font><Font size="22.0" /></font>
-                        </Label>
-                    </children>
+                <HBox alignment="CENTER_LEFT" maxWidth="1000.0" spacing="20.0">
+                    <Button onAction="#handleIndietro" style="-fx-background-color: #f0f0f0; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 8 15;" text="← Torna indietro" />
+                </HBox>
+
+                <VBox alignment="CENTER" spacing="10.0">
+                    <Label fx:id="lblBrand" style="-fx-font-weight: bold; -fx-font-size: 48;" text="BRAND" />
+                    <Label fx:id="lblGenere" style="-fx-font-size: 24; -fx-text-fill: #666666;" text="Genere" />
                 </VBox>
 
-                <HBox alignment="CENTER" spacing="100.0">
-                    <children>
-                        <VBox alignment="CENTER" spacing="25.0">
-                            <children>
-                                <ImageView fitHeight="380.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 15, 0, 0, 8);">
-                                    <image><Image url="@/images/nike_uomo.jpg" /></image>
-                                </ImageView>
-                                <Button onAction="#handleUomo" onMouseEntered="#animazioneEntraBottone" onMouseExited="#animazioneEsceBottone" prefWidth="220.0" style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 12;" text="UOMO" />
-                            </children>
-                        </VBox>
-
-                        <VBox alignment="CENTER" spacing="25.0">
-                            <children>
-                                <ImageView fitHeight="380.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true" style="-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.15), 15, 0, 0, 8);">
-                                    <image><Image url="@/images/nike_donna.jpg" /></image>
-                                </ImageView>
-                                <Button onAction="#handleDonna" onMouseEntered="#animazioneEntraBottone" onMouseExited="#animazioneEsceBottone" prefWidth="220.0" style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-size: 20; -fx-font-weight: bold; -fx-background-radius: 10; -fx-cursor: hand; -fx-padding: 12;" text="DONNA" />
-                            </children>
-                        </VBox>
-                    </children>
-                </HBox>
+                <VBox alignment="CENTER" maxWidth="600.0" spacing="20.0">
+                    <Button onAction="#handleCategoria" prefWidth="500.0" styleClass="category-button" text="Corsa" />
+                    <Button onAction="#handleCategoria" prefWidth="500.0" styleClass="category-button" text="Basket" />
+                    <Button onAction="#handleCategoria" prefWidth="500.0" styleClass="category-button" text="Calcio" />
+                    <Button onAction="#handleCategoria" prefWidth="500.0" styleClass="category-button" text="Fitness e Training" />
+                </VBox>
             </children>
         </VBox>
     </center>

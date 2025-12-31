@@ -1,165 +1,123 @@
 package com.sneakup.view.gui.cliente;
 
-import com.sneakup.controller.VisualizzaScarpeController;
-import com.sneakup.exception.SneakUpException;
-import com.sneakup.model.domain.Scarpa;
-import com.sneakup.view.gui.gestoreVendite.InserisciScarpaGUIController;
-import javafx.collections.FXCollections;
+import com.sneakup.model.Sessione;
+import com.sneakup.util.AlertUtils;
+import javafx.animation.ScaleTransition;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
-import javafx.util.Callback;
-import com.sneakup.model.domain.Recensione; // FONDAMENTALE
-import javafx.scene.control.TextArea;
+import javafx.util.Duration;
+import java.io.IOException;
 
 public class VisualizzaCatalogoGUIController {
 
-    @FXML private TableView<Scarpa> tabellaScarpe;
-    @FXML private TableColumn<Scarpa, Void> colonnaAzioni;
+    @FXML private Region barraAnimata;
+    @FXML private Button btnHome, btnCarrello, btnStato, btnPreferiti, btnLogin;
+    @FXML private Label lblUser;
 
-    // AGGIUNGI QUESTE RIGHE PER VEDERE I DATI
-    @FXML private TableColumn<Scarpa, String> colonnaModello;
-    @FXML private TableColumn<Scarpa, String> colonnaMarca;
-    @FXML private TableColumn<Scarpa, Double> colonnaPrezzo;
+    // AGGIUNTO: Riferimento per cambiare il testo "NIKE" in "ADIDAS" o "PUMA"
+    @FXML private Label lblBrandTitolo;
 
-    private final VisualizzaScarpeController logicController = new VisualizzaScarpeController();
+    private String brandSelezionato = "NIKE";
 
     @FXML
     public void initialize() {
-        setupTabella();
-        caricaDati();
-    }
+        if (barraAnimata != null) barraAnimata.setOpacity(0.0);
 
-    // Configura i bottoni nella tabella
-    // Configura i bottoni nella tabella
-    private void setupTabella() {
-        Callback<TableColumn<Scarpa, Void>, TableCell<Scarpa, Void>> cellFactory = new Callback<>() {
-            @Override
-            public TableCell<Scarpa, Void> call(final TableColumn<Scarpa, Void> param) {
-                return new TableCell<>() {
-
-                    private final Button btnModifica = new Button("Modifica");
-                    private final Button btnElimina = new Button("Elimina");
-                    private final javafx.scene.layout.HBox pane = new javafx.scene.layout.HBox(5, btnModifica, btnElimina);
-
-                    {
-                        // Stile Bottone Modifica (Blu/Giallo)
-                        btnModifica.setStyle("-fx-background-color: #ffc107; -fx-text-fill: black;");
-                        btnModifica.setOnAction(event -> {
-                            Scarpa scarpa = getTableView().getItems().get(getIndex());
-                            apriModifica(scarpa);
-                        });
-
-                        // Stile Bottone Elimina (Rosso)
-                        btnElimina.setStyle("-fx-background-color: #dc3545; -fx-text-fill: white;");
-                        btnElimina.setOnAction(event -> {
-                            Scarpa scarpa = getTableView().getItems().get(getIndex());
-                            gestisciEliminazione(scarpa);
-                        });
-                    }
-
-                    @Override
-                    public void updateItem(Void item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (empty) {
-                            setGraphic(null);
-                        } else {
-                            setGraphic(pane); // Mostra entrambi i bottoni
-                        }
-                    }
-                };
+        if (Sessione.getInstance().isLoggato()) {
+            if (btnLogin != null) {
+                btnLogin.setVisible(false);
+                btnLogin.setManaged(false);
             }
-        };
-        colonnaAzioni.setCellFactory(cellFactory);
+            if (lblUser != null) {
+                lblUser.setText("CIAO, " + Sessione.getInstance().getUsername().toUpperCase());
+                lblUser.setVisible(true);
+                lblUser.setManaged(true);
+            }
+        }
     }
 
-    // Metodo per aprire la finestra di modifica
-    private void apriModifica(Scarpa scarpa) {
+    /**
+     * Metodo chiamato dal BenvenutoGUIController per passare il brand scelto.
+     */
+    public void setBrand(String brand) {
+        this.brandSelezionato = brand;
+        // Aggiorna visivamente il titolo nella pagina
+        if (lblBrandTitolo != null) {
+            lblBrandTitolo.setText(brand.toUpperCase());
+        }
+    }
+
+    // --- METODI PER IL CATALOGO ---
+    @FXML private void handleUomo(ActionEvent event) {
+        // Usa la variabile dinamica invece di "NIKE" fisso
+        navigaVersoSelezione(event, "Uomo", brandSelezionato);
+    }
+
+    @FXML private void handleDonna(ActionEvent event) {
+        // Usa la variabile dinamica invece di "NIKE" fisso
+        navigaVersoSelezione(event, "Donna", brandSelezionato);
+    }
+
+    private void navigaVersoSelezione(ActionEvent event, String genere, String brand) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/InserisciScarpa.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/SelezioneCategoria.fxml"));
             Parent root = loader.load();
-
-            // Ottieni il controller della finestra di inserimento e passagli i dati
-            InserisciScarpaGUIController controller = loader.getController();
-            controller.setDatiScarpa(scarpa);
-
-            // Cambia scena
-            Stage stage = (Stage) tabellaScarpe.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-        }
+            SelezioneCategoriaGUIController controller = loader.getController();
+            if (controller != null) controller.setDati(genere, brand);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
-    private void gestisciEliminazione(Scarpa s) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Conferma Eliminazione");
-        alert.setContentText("Sei sicuro di voler eliminare: " + s.getModello() + "?");
+    // --- METODI PER LA NAVBAR ---
+    @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
+    @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
+    @FXML private void handleLoginGenerico(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Login.fxml"); }
+    @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/AreaPersonale.fxml"); }
 
-        if (alert.showAndWait().get() == ButtonType.OK) {
-            try {
-                logicController.eliminaScarpa(s.getId()); // Chiama il backend
-                caricaDati(); // Ricarica la tabella (fondamentale!)
-            } catch (SneakUpException e) {
-                e.printStackTrace();
-            }
-        }
+    @FXML private void handleCarrello(ActionEvent event) { System.out.println("Carrello"); }
+    @FXML private void handleStatoOrdine(ActionEvent event) { System.out.println("Stato Ordine"); }
+    @FXML private void handlePreferiti(ActionEvent event) { System.out.println("Preferiti"); }
+
+    // --- ANIMAZIONI ---
+    @FXML public void mostraEmuoviBarra(MouseEvent event) {
+        Node source = (Node) event.getSource();
+        Bounds b = source.localToScene(source.getBoundsInLocal());
+        Parent p = barraAnimata.getParent();
+        Point2D loc = p.sceneToLocal(b.getMinX(), b.getMinY());
+        barraAnimata.setLayoutX(loc.getX());
+        barraAnimata.setPrefWidth(b.getWidth());
+        barraAnimata.setOpacity(1.0);
     }
 
-    private void mostraRecensioni(Scarpa s) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Recensioni - " + s.getModello());
+    @FXML public void nascondiBarra(MouseEvent event) { if (barraAnimata != null) barraAnimata.setOpacity(0.0); }
+    @FXML public void sottolineaUser(MouseEvent event) { lblUser.setUnderline(true); }
+    @FXML public void ripristinaUser(MouseEvent event) { lblUser.setUnderline(false); }
+    @FXML public void iconaEntra(MouseEvent e) { zoom((Node)e.getSource(), 1.1); }
+    @FXML public void iconaEsce(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
+    @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node)e.getSource(), 1.05); }
+    @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
 
-        // Calcola media formattata
-        String media = String.format("%.1f", s.getMediaVoti());
-        alert.setHeaderText("Valutazione Media Utenti: " + media + " / 5.0");
-
-        StringBuilder sb = new StringBuilder();
-        if (s.getRecensioni().isEmpty()) {
-            sb.append("Non ci sono ancora recensioni per questa scarpa.");
-        } else {
-            for (Recensione r : s.getRecensioni()) {
-                sb.append("• ").append(r.toString()).append("\n\n");
-            }
-        }
-
-        // Usiamo una TextArea per rendere il testo scorrevole se lungo
-        TextArea area = new TextArea(sb.toString());
-        area.setEditable(false);
-        area.setWrapText(true);
-        area.setMaxWidth(Double.MAX_VALUE);
-        area.setMaxHeight(Double.MAX_VALUE);
-
-        alert.getDialogPane().setContent(area);
-        alert.showAndWait();
+    private void zoom(Node n, double s) {
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
+        st.setToX(s); st.setToY(s); st.play();
     }
 
-    // ... (metodi caricaDati, handleAggiorna, tornaAlMenu rimangono uguali) ...
-    @FXML private void handleAggiorna() { caricaDati(); }
-
-    private void caricaDati() {
+    private void navigaVerso(Object event, String fxmlPath) {
         try {
-            tabellaScarpe.setItems(FXCollections.observableArrayList(logicController.getTutteLeScarpe()));
-        } catch (SneakUpException e) { e.printStackTrace(); }
-    }
-
-    @FXML
-    private void tornaAlMenu(javafx.event.ActionEvent event) {
-        try {
-            // MODIFICA QUI: Puntiamo a MenuPrincipale.fxml (l'area del venditore)
-            // invece che al file cancellato HomePrincipale.fxml
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/com/sneakup/view/MenuPrincipale.fxml"));
-            javafx.scene.Parent root = loader.load();
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new javafx.scene.Scene(root));
-            stage.show();
-        } catch (java.io.IOException e) {
-            e.printStackTrace();
-        }
+            Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
+            Stage stage = (Stage) ((Node) ((javafx.event.Event) event).getSource()).getScene().getWindow();
+            stage.getScene().setRoot(root);
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

@@ -25,4 +25,16 @@ public class AlertUtils {
         alert.setContentText(messaggio);
         alert.showAndWait();
     }
+
+    /**
+     * Mostra un messaggio informativo generico (Icona Informazione)
+     * Utile per avvisi tipo "Funzionalità in arrivo"
+     */
+    public static void mostraInfo(String messaggio) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Informazione"); // Titolo diverso da "Successo"
+        alert.setHeaderText(null);
+        alert.setContentText(messaggio);
+        alert.showAndWait();
+    }
 }

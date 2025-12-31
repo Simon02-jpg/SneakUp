@@ -1,17 +1,16 @@
 package com.sneakup.view.gui.common;
 
 import com.sneakup.controller.LoginController;
-import javafx.animation.FadeTransition;
+import com.sneakup.util.AlertUtils;
 import javafx.animation.ScaleTransition;
-import javafx.animation.TranslateTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -19,6 +18,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
 import java.io.IOException;
 
 public class RecuperoPasswordGUIController {
@@ -28,177 +28,145 @@ public class RecuperoPasswordGUIController {
     @FXML private PasswordField confermaPasswordField;
     @FXML private Region barraAnimata;
 
+    // Questo deve corrispondere al fx:id nel FXML
+    @FXML private Button btnHome;
+
     private final LoginController loginController = new LoginController();
 
-    // --- NAVIGAZIONE CORRETTA: LOGO/HOME -> BENVENUTO ---
-
     @FXML
-    private void handleReloadHome() {
-        try {
-            // CARICA LA SCHERMATA BENVENUTO (Home Principale)
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
-            Parent root = loader.load();
-
-            // Recupera lo stage usando un elemento della scena (es. usernameField)
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-
-            stage.setScene(new Scene(root));
-
-            // Fix schermo intero
-            stage.setMaximized(false);
-            stage.setMaximized(true);
-
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // --- ALTRI METODI DI NAVIGAZIONE ---
-
-    @FXML
-    private void handleLoginGenerico(ActionEvent event) {
-        tornaAlLogin(event); // L'icona omino invece va giustamente al Login
-    }
-
-    @FXML
-    private void tornaAlLogin(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
-            Parent root = loader.load();
-
-            Stage stage;
-            if (event != null && event.getSource() instanceof Node) {
-                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            } else {
-                stage = (Stage) usernameField.getScene().getWindow();
-            }
-
-            stage.setScene(new Scene(root));
-            stage.setMaximized(false);
-            stage.setMaximized(true);
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void handleCarrello(ActionEvent event) {
-        mostraInfo("Info", "Torna alla Home per accedere al carrello.");
-    }
-
-    @FXML
-    private void handleStatoOrdine(ActionEvent event) {
-        mostraInfo("Info", "Torna alla Home per tracciare un ordine.");
-    }
-
-    @FXML
-    private void handlePreferiti(ActionEvent event) {
-        mostraInfo("Info", "Devi accedere per vedere i preferiti.");
-    }
-
-    // --- ANIMAZIONI HEADER ---
-
-    @FXML
-    private void mostraEmuoviBarra(MouseEvent event) {
-        Button source = (Button) event.getSource();
-        Bounds buttonBounds = source.localToScene(source.getBoundsInLocal());
-        Bounds barParentBounds = barraAnimata.getParent().localToScene(barraAnimata.getParent().getBoundsInLocal());
-
-        double newX = buttonBounds.getMinX() - barParentBounds.getMinX()
-                + (source.getWidth() / 2) - (barraAnimata.getWidth() / 2);
-
-        if (barraAnimata.getOpacity() < 1) {
-            FadeTransition ft = new FadeTransition(Duration.millis(200), barraAnimata);
-            ft.setToValue(1.0);
-            ft.play();
-        }
-
-        TranslateTransition tt = new TranslateTransition(Duration.millis(200), barraAnimata);
-        tt.setToX(newX);
-        tt.play();
-    }
-
-    @FXML
-    private void nascondiBarra(MouseEvent event) {
-        FadeTransition ft = new FadeTransition(Duration.millis(300), barraAnimata);
-        ft.setToValue(0.0);
-        ft.play();
-    }
-
-    @FXML
-    private void iconaEntra(MouseEvent event) {
-        Node nodo = (Node) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), nodo);
-        st.setToX(1.15);
-        st.setToY(1.15);
-        st.play();
-    }
-
-    @FXML
-    private void iconaEsce(MouseEvent event) {
-        Node nodo = (Node) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), nodo);
-        st.setToX(1.0);
-        st.setToY(1.0);
-        st.play();
-    }
-
-    // --- ANIMAZIONI BOTTONI PAGINA ---
-
-    @FXML
-    private void animazioneEntraBottone(MouseEvent event) {
-        Button btn = (Button) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
-        st.setToX(1.05);
-        st.setToY(1.05);
-        st.play();
-    }
-
-    @FXML
-    private void animazioneEsceBottone(MouseEvent event) {
-        Button btn = (Button) event.getSource();
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), btn);
-        st.setToX(1.0);
-        st.setToY(1.0);
-        st.play();
+    public void initialize() {
+        if (barraAnimata != null) barraAnimata.setOpacity(0.0);
     }
 
     // --- LOGICA CAMBIO PASSWORD ---
+    @FXML
+    public void handleCambiaPassword(ActionEvent event) {
+        // .trim() è fondamentale: un solo spazio invisibile nel DB rompe il match
+        String u = usernameField.getText().trim();
+        String p = nuovaPasswordField.getText();
+        String c = confermaPasswordField.getText();
+
+        if (u.isEmpty() || p.isEmpty()) {
+            AlertUtils.mostraErrore("Compila tutti i campi.");
+            return;
+        }
+        if (!p.equals(c)) {
+            AlertUtils.mostraErrore("Le password non coincidono!");
+            return;
+        }
+
+        // Prova a chiamare direttamente il DAO per testare se il problema è nel LoginController
+        try {
+            com.sneakup.model.dao.db.UtenteDAOJDBC utenteDAO = new com.sneakup.model.dao.db.UtenteDAOJDBC();
+            com.sneakup.model.domain.Utente utente = utenteDAO.recuperaDatiUtente(u);
+
+            if (utente != null) {
+                utente.setPassword(p);
+                utenteDAO.aggiornaUtente(utente); // Assicurati che aggiornaUtente faccia l'UPDATE nel DB
+
+                AlertUtils.mostraSuccesso("Password aggiornata nel database! Ora puoi accedere.");
+                tornaAlLogin(event);
+            } else {
+                // Se arrivi qui, significa che "u" non esiste né come username né come email nel DB
+                AlertUtils.mostraErrore("Username o Email '" + u + "' non trovata nel sistema.");
+            }
+        } catch (Exception ex) {
+            AlertUtils.mostraErrore("Errore tecnico: " + ex.getMessage());
+        }
+    }
+
+    // --- NAVIGAZIONE HOME (SDOPPIATA PER FAR FUNZIONARE FXML) ---
+
+    // Metodo chiamato dal LOGO (onMouseClicked)
+    @FXML
+    public void handleReloadHome(MouseEvent event) {
+        vaiAlBenvenuto(event);
+    }
+
+    // Metodo chiamato dal BOTTONE (onAction)
+    @FXML
+    public void handleReloadHome(ActionEvent event) {
+        vaiAlBenvenuto(event);
+    }
+
+    // --- NAVIGAZIONE ANNULLA / LOGIN ---
 
     @FXML
-    private void handleCambiaPassword(ActionEvent event) {
-        String user = usernameField.getText();
-        String pass = nuovaPasswordField.getText();
-        String conf = confermaPasswordField.getText();
-
-        if (user.isEmpty() || pass.isEmpty()) {
-            mostraAlert("Errore", "Inserisci username e password.");
-            return;
-        }
-        if (!pass.equals(conf)) {
-            mostraAlert("Errore", "Le password non coincidono!");
-            return;
-        }
-
-        boolean rigaAggiornata = loginController.resetPassword(user, pass);
-
-        if (rigaAggiornata) {
-            mostraInfo("Successo", "Password aggiornata correttamente!");
-            tornaAlLogin(event);
-        } else {
-            mostraAlert("Errore", "Username non trovato.");
-        }
+    public void handleAnnulla(ActionEvent event) {
+        tornaAlLogin(event);
     }
 
-    private void mostraAlert(String t, String m) {
-        Alert a = new Alert(Alert.AlertType.ERROR);
-        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    // Metodo chiamato dal bottone "Annulla" se usa onAction="#tornaAlLogin"
+    @FXML
+    public void tornaAlLogin(ActionEvent event) {
+        cambiaPagina("/com/sneakup/view/Login.fxml", event);
     }
 
-    private void mostraInfo(String t, String m) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setTitle(t); a.setHeaderText(null); a.setContentText(m); a.showAndWait();
+    // Metodo chiamato se usi il mouse su scritte/icone
+    @FXML
+    public void tornaAlLogin(MouseEvent event) {
+        cambiaPagina("/com/sneakup/view/Login.fxml", event);
+    }
+
+    // Metodo per il bottone Login nella barra in alto
+    @FXML
+    private void handleLoginGenerico(ActionEvent event) {
+        cambiaPagina("/com/sneakup/view/Login.fxml", event);
+    }
+
+    // --- MENU VARI ---
+    @FXML public void handleCarrello(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
+    @FXML public void handleStatoOrdine(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
+    @FXML public void handlePreferiti(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
+
+    // --- ANIMAZIONI ---
+    @FXML
+    public void mostraEmuoviBarra(MouseEvent event) {
+        if (barraAnimata == null) return;
+        Node source = (Node) event.getSource();
+        Bounds b = source.localToScene(source.getBoundsInLocal());
+        Parent p = barraAnimata.getParent();
+        Point2D loc = p.sceneToLocal(b.getMinX(), b.getMinY());
+        barraAnimata.setLayoutX(loc.getX());
+        barraAnimata.setPrefWidth(b.getWidth());
+        barraAnimata.setOpacity(1.0);
+    }
+    @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata!=null) barraAnimata.setOpacity(0.0); }
+    @FXML public void animazioneEntra(MouseEvent e) { zoom((Node)e.getSource(), 1.1); }
+    @FXML public void animazioneEsce(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
+    @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node)e.getSource(), 1.05); }
+    @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
+    @FXML public void iconaEntra(MouseEvent e) { zoom((Node)e.getSource(), 1.2); }
+    @FXML public void iconaEsce(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
+
+    private void zoom(Node n, double s) {
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
+        st.setToX(s); st.setToY(s); st.play();
+    }
+
+    // --- HELPER NAVIGAZIONE ---
+    private void vaiAlBenvenuto(java.util.EventObject event) {
+        cambiaPagina("/com/sneakup/view/Benvenuto.fxml", event);
+    }
+
+    private void cambiaPagina(String fxml, java.util.EventObject event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            Stage stage = null;
+            if (event != null && event.getSource() instanceof Node) {
+                stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            } else if (usernameField.getScene() != null) {
+                stage = (Stage) usernameField.getScene().getWindow();
+            }
+            if (stage != null) {
+                boolean max = stage.isMaximized();
+                stage.setScene(new Scene(root));
+                stage.setMaximized(max);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            AlertUtils.mostraErrore("Errore navigazione: " + e.getMessage());
+        }
     }
 }
