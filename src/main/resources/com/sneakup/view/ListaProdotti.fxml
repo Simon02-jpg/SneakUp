@@ -83,7 +83,8 @@
                         </VBox>
                         <Region HBox.hgrow="ALWAYS" />
                         <Label text="Ordina per:" />
-                        <ComboBox fx:id="comboOrdina" onAction="#aggiornaLista" prefWidth="150.0" promptText="Prezzo" />
+
+                        <ComboBox fx:id="comboOrdina" onAction="#handleFiltroAction" prefWidth="150.0" promptText="Prezzo" />
                     </children>
                 </HBox>
 
@@ -96,17 +97,19 @@
                             <children>
                                 <Label text="Filtri" textFill="#333333"><font><Font name="System Bold" size="18.0" /></font></Label>
 
-                                <TextField fx:id="txtRicerca" onKeyReleased="#aggiornaLista" promptText="Cerca nome..." />
+                                <TextField fx:id="txtRicerca" onKeyReleased="#handleRicercaKey" promptText="Cerca nome..." />
 
                                 <Label text="Prezzo" textFill="#666666"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                <CheckBox fx:id="chkP1" onAction="#aggiornaLista" text="0€ - 50€" />
-                                <CheckBox fx:id="chkP2" onAction="#aggiornaLista" text="50€ - 100€" />
-                                <CheckBox fx:id="chkP3" onAction="#aggiornaLista" text="100€ - 200€" />
-                                <CheckBox fx:id="chkP4" onAction="#aggiornaLista" text="Oltre 200€" />
+
+                                <CheckBox fx:id="chkP1" onAction="#handleFiltroAction" text="0€ - 50€" />
+                                <CheckBox fx:id="chkP2" onAction="#handleFiltroAction" text="50€ - 100€" />
+                                <CheckBox fx:id="chkP3" onAction="#handleFiltroAction" text="100€ - 200€" />
+                                <CheckBox fx:id="chkP4" onAction="#handleFiltroAction" text="Oltre 200€" />
 
                                 <Label text="Valutazione" textFill="#666666"><font><Font name="System Bold" size="14.0" /></font></Label>
-                                <CheckBox fx:id="chkS4" onAction="#aggiornaLista" text="★★★★☆ e su" />
-                                <CheckBox fx:id="chkS3" onAction="#aggiornaLista" text="★★★☆☆ e su" />
+
+                                <CheckBox fx:id="chkS4" onAction="#handleFiltroAction" text="★★★★☆ e su" />
+                                <CheckBox fx:id="chkS3" onAction="#handleFiltroAction" text="★★★☆☆ e su" />
                             </children>
                         </VBox>
 

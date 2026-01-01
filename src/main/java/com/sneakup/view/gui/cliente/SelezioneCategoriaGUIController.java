@@ -1,6 +1,7 @@
 package com.sneakup.view.gui.cliente;
 
 import com.sneakup.model.Sessione;
+import com.sneakup.view.gui.common.LoginGUIController; // IMPORTANTE
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,7 +27,7 @@ public class SelezioneCategoriaGUIController {
     @FXML private Region barraAnimata;
 
     private String brandSelezionato = "NIKE";
-    private String genereSelezionato = "UOMO"; // Default
+    private String genereSelezionato = "UOMO";
 
     @FXML
     public void initialize() {
@@ -43,8 +44,7 @@ public class SelezioneCategoriaGUIController {
 
     public void setDati(String genere, String brand) {
         this.brandSelezionato = brand;
-        this.genereSelezionato = genere; // Salva il genere (es. UOMO)
-
+        this.genereSelezionato = genere;
         if (lblGenere != null) lblGenere.setText(genere.toUpperCase());
         if (lblBrandTitolo != null) lblBrandTitolo.setText(brand.toUpperCase());
     }
@@ -53,16 +53,11 @@ public class SelezioneCategoriaGUIController {
     private void handleCategoria(ActionEvent event) {
         Button btn = (Button) event.getSource();
         String categoriaScelta = btn.getText().replace("\n", " ").trim();
-
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/ListaProdotti.fxml"));
             Parent root = loader.load();
-
             ListaProdottiGUIController controller = loader.getController();
-
-            // Passa tutti e 3 i dati: Brand, Categoria e GENERE
             controller.setFiltri(this.brandSelezionato, categoriaScelta, this.genereSelezionato);
-
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.show();
@@ -72,28 +67,35 @@ public class SelezioneCategoriaGUIController {
         }
     }
 
-    // --- Metodi di utilità ---
+    // --- METODO LOGIN MODIFICATO PER TORNARE INDIETRO CORRETTAMENTE ---
+    @FXML
+    private void handleLoginGenerico(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
+            Parent root = loader.load();
+
+            LoginGUIController loginCtrl = loader.getController();
+            // Passiamo Brand e Genere. Categoria è null perché non l'abbiamo ancora scelta.
+            loginCtrl.setProvenienza("/com/sneakup/view/SelezioneCategoria.fxml",
+                    this.brandSelezionato,
+                    this.genereSelezionato,
+                    null);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
     @FXML private void handleIndietro(ActionEvent event) { navigaVerso("/com/sneakup/view/VisualizzaCatalogo.fxml", event); }
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
-    @FXML private void handleLoginGenerico(ActionEvent event) { navigaVerso("/com/sneakup/view/Login.fxml", event); }
     @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", event); }
-
-    // Navbar Placeholder
     @FXML private void handleCarrello(ActionEvent event) { mostraInfo("Carrello", "In arrivo"); }
     @FXML private void handleStatoOrdine(ActionEvent event) { mostraInfo("Stato", "In arrivo"); }
     @FXML private void handlePreferiti(ActionEvent event) { mostraInfo("Preferiti", "In arrivo"); }
 
-    // Animazioni
-    @FXML public void mostraEmuoviBarra(MouseEvent event) {
-        Node source = (Node) event.getSource();
-        Bounds b = source.localToScene(source.getBoundsInLocal());
-        Parent p = barraAnimata.getParent();
-        Point2D loc = p.sceneToLocal(b.getMinX(), b.getMinY());
-        barraAnimata.setLayoutX(loc.getX());
-        barraAnimata.setPrefWidth(b.getWidth());
-        barraAnimata.setOpacity(1.0);
-    }
+    @FXML public void mostraEmuoviBarra(MouseEvent event) { Node source = (Node) event.getSource(); Bounds b = source.localToScene(source.getBoundsInLocal()); Parent p = barraAnimata.getParent(); Point2D loc = p.sceneToLocal(b.getMinX(), b.getMinY()); barraAnimata.setLayoutX(loc.getX()); barraAnimata.setPrefWidth(b.getWidth()); barraAnimata.setOpacity(1.0); }
     @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata!=null) barraAnimata.setOpacity(0.0); }
     @FXML public void sottolineaUser(MouseEvent e) { lblUser.setUnderline(true); }
     @FXML public void ripristinaUser(MouseEvent e) { lblUser.setUnderline(false); }
@@ -101,7 +103,6 @@ public class SelezioneCategoriaGUIController {
     @FXML public void iconaEsce(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
     @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.05); }
     @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
-
     private void zoom(Node n, double s) { ScaleTransition st = new ScaleTransition(Duration.millis(200), n); st.setToX(s); st.setToY(s); st.play(); }
 
     private void navigaVerso(String fxml, java.util.EventObject e) {

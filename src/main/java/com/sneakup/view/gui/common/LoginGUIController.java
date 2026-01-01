@@ -6,9 +6,9 @@ import com.sneakup.model.dao.db.UtenteDAOJDBC;
 import com.sneakup.model.domain.Utente;
 import com.sneakup.util.AlertUtils;
 import com.sneakup.exception.SneakUpException;
-// IMPORT NECESSARI PER GESTIRE IL RITORNO ALLE VARIE PAGINE
-import com.sneakup.view.gui.cliente.VisualizzaCatalogoGUIController;
+import com.sneakup.view.gui.cliente.ListaProdottiGUIController;
 import com.sneakup.view.gui.cliente.SelezioneCategoriaGUIController;
+import com.sneakup.view.gui.cliente.VisualizzaCatalogoGUIController;
 
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
@@ -35,8 +35,12 @@ public class LoginGUIController {
     @FXML private Region barraAnimata;
 
     private final LoginController loginController = new LoginController();
+
+    // --- DATI PER IL RITORNO ALLA PAGINA PRECEDENTE ---
     private String paginaPrecedente = null;
     private String brandPrecedente = null;
+    private String generePrecedente = null;
+    private String categoriaPrecedente = null;
 
     @FXML
     public void initialize() {
@@ -45,9 +49,12 @@ public class LoginGUIController {
         }
     }
 
-    public void setProvenienza(String fxmlPath, String brand) {
+    // NUOVO METODO: Accetta tutti i dettagli necessari per tornare indietro
+    public void setProvenienza(String fxmlPath, String brand, String genere, String categoria) {
         this.paginaPrecedente = fxmlPath;
         this.brandPrecedente = brand;
+        this.generePrecedente = genere;
+        this.categoriaPrecedente = categoria;
     }
 
     @FXML
@@ -82,14 +89,20 @@ public class LoginGUIController {
                             // Controlliamo in quale pagina dobbiamo tornare e reimpostiamo i dati
                             Object controller = loader.getController();
 
-                            // CASO 1: Torno al Catalogo (Nike/Adidas/Puma Home)
+                            // CASO 1: Torno al Catalogo (Home Brand)
                             if (controller instanceof VisualizzaCatalogoGUIController) {
                                 ((VisualizzaCatalogoGUIController) controller).setBrand(brandPrecedente);
                             }
                             // CASO 2: Torno alla Selezione Categorie (Corsa/Basket/Calcio)
                             else if (controller instanceof SelezioneCategoriaGUIController) {
-                                // "CATEGORIE" è un testo di default per il sottotitolo
-                                ((SelezioneCategoriaGUIController) controller).setDati("CATEGORIE", brandPrecedente);
+                                // Ripristino Brand e Genere (es. NIKE - UOMO)
+                                String gen = (generePrecedente != null) ? generePrecedente : "CATEGORIE";
+                                ((SelezioneCategoriaGUIController) controller).setDati(gen, brandPrecedente);
+                            }
+                            // CASO 3: Torno alla Lista Prodotti (Le scarpe)
+                            else if (controller instanceof ListaProdottiGUIController) {
+                                // Ripristino Brand, Categoria e Genere (es. NIKE - CORSA - UOMO)
+                                ((ListaProdottiGUIController) controller).setFiltri(brandPrecedente, categoriaPrecedente, generePrecedente);
                             }
 
                             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -100,6 +113,7 @@ public class LoginGUIController {
                             navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
                         }
                     } else {
+                        // Se non c'è una pagina precedente, vai alla Home
                         navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
                     }
                 }
@@ -113,7 +127,7 @@ public class LoginGUIController {
         }
     }
 
-    // --- ALTRI METODI DI NAVIGAZIONE E ANIMAZIONE (INVARIATI) ---
+    // --- ALTRI METODI DI NAVIGAZIONE ---
     @FXML private void handlePasswordDimenticata(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/RecuperoPassword.fxml"); }
     @FXML private void handleRegistrazione(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Registrazione.fxml"); }
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
@@ -123,8 +137,7 @@ public class LoginGUIController {
     @FXML private void handleStatoOrdine(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
     @FXML private void handlePreferiti(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
 
-    @FXML
-    public void mostraEmuoviBarra(MouseEvent event) {
+    @FXML public void mostraEmuoviBarra(MouseEvent event) {
         if (barraAnimata == null) return;
         Node source = (Node) event.getSource();
         Bounds b = source.localToScene(source.getBoundsInLocal());
@@ -134,17 +147,12 @@ public class LoginGUIController {
         barraAnimata.setPrefWidth(b.getWidth());
         barraAnimata.setOpacity(1.0);
     }
-
     @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata != null) barraAnimata.setOpacity(0.0); }
     @FXML public void iconaEntra(MouseEvent e) { zoom((Node)e.getSource(), 1.1); }
     @FXML public void iconaEsce(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
     @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node)e.getSource(), 1.05); }
     @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node)e.getSource(), 1.0); }
-
-    private void zoom(Node n, double s) {
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
-        st.setToX(s); st.setToY(s); st.play();
-    }
+    private void zoom(Node n, double s) { ScaleTransition st = new ScaleTransition(Duration.millis(200), n); st.setToX(s); st.setToY(s); st.play(); }
 
     private void navigaVerso(java.util.EventObject event, String fxmlPath) {
         try {
