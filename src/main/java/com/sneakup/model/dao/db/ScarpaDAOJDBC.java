@@ -29,62 +29,29 @@ public class ScarpaDAOJDBC implements ScarpaDAO {
                 this.password = prop.getProperty("db.password");
             }
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, "Errore caricamento config", ex);
+            logger.log(Level.SEVERE, "Errore config", ex);
         }
     }
 
-    // ... (Mantieni qui i metodi updatePassword e registraNuovoUtente che avevi già) ...
-    public boolean updatePassword(String username, String nuovaPassword) {
-        // ... (codice invariato) ...
-        return false; // placeholder per brevità, tieni il tuo codice originale
-    }
-    public boolean registraNuovoUtente(String username, String password, String nome, String cognome, String email) {
-        // ... (codice invariato) ...
-        return false; // placeholder
-    }
+    // Metodi placeholder per brevità (mantieni i tuoi originali se li usi)
+    public boolean updatePassword(String u, String p) { return false; }
+    public boolean registraNuovoUtente(String u, String p, String n, String c, String e) { return false; }
+    @Override public void addScarpa(Scarpa s) throws SneakUpException {}
+    @Override public List<Scarpa> getAllScarpe() throws SneakUpException { return new ArrayList<>(); }
+    @Override public void deleteScarpa(int id) throws SneakUpException {}
+    @Override public void updateScarpa(Scarpa s) throws SneakUpException {}
+    @Override public List<Recensione> getRecensioniPerScarpa(int id) throws SneakUpException { return new ArrayList<>(); }
+    @Override public void aggiungiRecensione(int id, Recensione r) throws SneakUpException {}
 
-    @Override
-    public void addScarpa(Scarpa scarpa) throws SneakUpException {
-        // ... (Mantieni il tuo codice originale) ...
-    }
-
-    @Override
-    public List<Scarpa> getAllScarpe() throws SneakUpException {
-        // ... (Mantieni il tuo codice originale) ...
-        return new ArrayList<>(); // placeholder
-    }
-
-    @Override
-    public void deleteScarpa(int id) throws SneakUpException {
-        // ... (Mantieni il tuo codice originale) ...
-    }
-
-    @Override
-    public void updateScarpa(Scarpa s) throws SneakUpException {
-        // ... (Mantieni il tuo codice originale) ...
-    }
-
-    @Override
-    public List<Recensione> getRecensioniPerScarpa(int idScarpa) throws SneakUpException {
-        // ... (Mantieni il tuo codice originale) ...
-        return new ArrayList<>(); // placeholder
-    }
-
-    @Override
-    public void aggiungiRecensione(int id, Recensione r) throws SneakUpException {
-        // ... (Mantieni il tuo codice originale) ...
-    }
-
-    // --- NUOVO METODO PER LA RICERCA ---
+    // --- QUERY AGGIORNATA ---
     public List<Scarpa> cercaScarpe(String keyword) throws SneakUpException {
         List<Scarpa> lista = new ArrayList<>();
-        // Cerca sia nel modello che nella marca (es. "Nike" o "Air Max")
-        String query = "SELECT idSCARPA, modello, marca, categoria, taglia, prezzo, quantita FROM SCARPE WHERE modello LIKE ? OR marca LIKE ?";
+        // Selezioniamo TUTTO (*) inclusa la nuova colonna GENERE
+        String query = "SELECT * FROM SCARPE WHERE modello LIKE ? OR marca LIKE ?";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
              PreparedStatement st = conn.prepareStatement(query)) {
 
-            // %parola% permette di trovare "Air" dentro "Nike Air Max"
             String searchPattern = "%" + keyword + "%";
             st.setString(1, searchPattern);
             st.setString(2, searchPattern);
@@ -92,23 +59,25 @@ public class ScarpaDAOJDBC implements ScarpaDAO {
             try (ResultSet rs = st.executeQuery()) {
                 while (rs.next()) {
                     Scarpa s = new Scarpa();
-                    int id = rs.getInt("idSCARPA");
-                    s.setId(id);
+                    s.setId(rs.getInt("idSCARPA"));
                     s.setModello(rs.getString("modello"));
                     s.setMarca(rs.getString("marca"));
                     s.setCategoria(rs.getString("categoria"));
+
+                    // --- PUNTO CRUCIALE: LEGGERE IL GENERE ---
+                    s.setGenere(rs.getString("genere"));
+
                     s.setTaglia(rs.getDouble("taglia"));
                     s.setPrezzo(rs.getDouble("prezzo"));
                     s.setQuantitaDisponibile(rs.getInt("quantita"));
-
-                    // Carica anche le recensioni se necessario (opzionale per la lista veloce)
-                    // s.getRecensioni().addAll(getRecensioniPerScarpa(id));
+                    s.setDescrizione(rs.getString("descrizione"));
+                    s.setUrlImmagine(rs.getString("url_immagine"));
 
                     lista.add(s);
                 }
             }
         } catch (SQLException e) {
-            throw new SneakUpException("Errore durante la ricerca nel DB", e);
+            throw new SneakUpException("Errore DB", e);
         }
         return lista;
     }

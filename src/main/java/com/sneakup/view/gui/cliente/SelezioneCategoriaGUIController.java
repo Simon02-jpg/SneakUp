@@ -9,6 +9,8 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
@@ -20,45 +22,69 @@ import java.io.IOException;
 public class SelezioneCategoriaGUIController {
 
     @FXML private Button btnLogin, btnHome, btnCarrello, btnStato, btnPreferiti;
-    @FXML private Label lblUser, lblGenere, lblBrand;
+    @FXML private Label lblUser, lblGenere, lblBrandTitolo;
     @FXML private Region barraAnimata;
 
-    private String brandSelezionato;
+    private String brandSelezionato = "NIKE";
+    private String genereSelezionato = "UOMO"; // Default
 
     @FXML
     public void initialize() {
         if (barraAnimata != null) barraAnimata.setOpacity(0.0);
         if (Sessione.getInstance().isLoggato()) {
-            btnLogin.setVisible(false);
-            btnLogin.setManaged(false);
-            lblUser.setText("CIAO, " + Sessione.getInstance().getUsername().toUpperCase());
-            lblUser.setVisible(true);
-            lblUser.setManaged(true);
+            if (btnLogin != null) { btnLogin.setVisible(false); btnLogin.setManaged(false); }
+            if (lblUser != null) {
+                lblUser.setText("CIAO, " + Sessione.getInstance().getUsername().toUpperCase());
+                lblUser.setVisible(true);
+                lblUser.setManaged(true);
+            }
         }
     }
 
     public void setDati(String genere, String brand) {
         this.brandSelezionato = brand;
+        this.genereSelezionato = genere; // Salva il genere (es. UOMO)
+
         if (lblGenere != null) lblGenere.setText(genere.toUpperCase());
-        if (lblBrand != null) lblBrand.setText(brand.toUpperCase());
+        if (lblBrandTitolo != null) lblBrandTitolo.setText(brand.toUpperCase());
     }
 
+    @FXML
+    private void handleCategoria(ActionEvent event) {
+        Button btn = (Button) event.getSource();
+        String categoriaScelta = btn.getText().replace("\n", " ").trim();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/ListaProdotti.fxml"));
+            Parent root = loader.load();
+
+            ListaProdottiGUIController controller = loader.getController();
+
+            // Passa tutti e 3 i dati: Brand, Categoria e GENERE
+            controller.setFiltri(this.brandSelezionato, categoriaScelta, this.genereSelezionato);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            mostraInfo("Errore", "Impossibile aprire la lista prodotti.");
+        }
+    }
+
+    // --- Metodi di utilità ---
     @FXML private void handleIndietro(ActionEvent event) { navigaVerso("/com/sneakup/view/VisualizzaCatalogo.fxml", event); }
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleLoginGenerico(ActionEvent event) { navigaVerso("/com/sneakup/view/Login.fxml", event); }
     @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", event); }
 
-    @FXML private void handleCarrello(ActionEvent event) { System.out.println("Carrello"); }
-    @FXML private void handleStatoOrdine(ActionEvent event) { System.out.println("Stato"); }
-    @FXML private void handlePreferiti(ActionEvent event) { System.out.println("Preferiti"); }
+    // Navbar Placeholder
+    @FXML private void handleCarrello(ActionEvent event) { mostraInfo("Carrello", "In arrivo"); }
+    @FXML private void handleStatoOrdine(ActionEvent event) { mostraInfo("Stato", "In arrivo"); }
+    @FXML private void handlePreferiti(ActionEvent event) { mostraInfo("Preferiti", "In arrivo"); }
 
-    @FXML private void handleCategoria(ActionEvent event) {
-        Button b = (Button) event.getSource();
-        System.out.println("Filtro: " + brandSelezionato + " - " + b.getText());
-    }
-
-    // --- ANIMAZIONI ---
+    // Animazioni
     @FXML public void mostraEmuoviBarra(MouseEvent event) {
         Node source = (Node) event.getSource();
         Bounds b = source.localToScene(source.getBoundsInLocal());
@@ -68,22 +94,28 @@ public class SelezioneCategoriaGUIController {
         barraAnimata.setPrefWidth(b.getWidth());
         barraAnimata.setOpacity(1.0);
     }
-    @FXML public void nascondiBarra(MouseEvent event) { if (barraAnimata != null) barraAnimata.setOpacity(0.0); }
-    @FXML public void sottolineaUser(MouseEvent event) { lblUser.setUnderline(true); }
-    @FXML public void ripristinaUser(MouseEvent event) { lblUser.setUnderline(false); }
+    @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata!=null) barraAnimata.setOpacity(0.0); }
+    @FXML public void sottolineaUser(MouseEvent e) { lblUser.setUnderline(true); }
+    @FXML public void ripristinaUser(MouseEvent e) { lblUser.setUnderline(false); }
     @FXML public void iconaEntra(MouseEvent e) { zoom((Node) e.getSource(), 1.1); }
     @FXML public void iconaEsce(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
+    @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.05); }
+    @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
 
-    private void zoom(Node n, double s) {
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
-        st.setToX(s); st.setToY(s); st.play();
-    }
+    private void zoom(Node n, double s) { ScaleTransition st = new ScaleTransition(Duration.millis(200), n); st.setToX(s); st.setToY(s); st.play(); }
 
-    private void navigaVerso(String fxmlPath, java.util.EventObject event) {
+    private void navigaVerso(String fxml, java.util.EventObject e) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource(fxmlPath));
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.getScene().setRoot(root);
-        } catch (IOException e) { e.printStackTrace(); }
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxml));
+            Parent root = loader.load();
+            if(fxml.contains("VisualizzaCatalogo")) {
+                VisualizzaCatalogoGUIController c = loader.getController();
+                c.setBrand(this.brandSelezionato);
+            }
+            Stage stage = (Stage)((Node)e.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch(IOException ex) { ex.printStackTrace(); }
     }
+    private void mostraInfo(String t, String m) { new Alert(Alert.AlertType.INFORMATION, m).showAndWait(); }
 }

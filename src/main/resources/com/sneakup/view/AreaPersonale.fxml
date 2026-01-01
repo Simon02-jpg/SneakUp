@@ -68,6 +68,11 @@
         <VBox alignment="CENTER" spacing="40.0" style="-fx-background-color: white;">
             <padding><Insets bottom="50" left="50" right="50" top="50" /></padding>
             <children>
+
+                <HBox alignment="CENTER_LEFT" maxWidth="1000.0">
+                    <Button onAction="#handleIndietro" style="-fx-background-color: #f0f0f0; -fx-background-radius: 20; -fx-cursor: hand; -fx-padding: 8 15;" text="← Torna indietro" />
+                </HBox>
+
                 <Label text="AREA PERSONALE" textFill="#222222">
                     <font><Font name="System Bold" size="36.0" /></font>
                 </Label>

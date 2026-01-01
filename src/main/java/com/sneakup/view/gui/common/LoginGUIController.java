@@ -1,12 +1,15 @@
 package com.sneakup.view.gui.common;
 
-import com.sneakup.controller.LoginController; // Aggiunto per delegare la logica
+import com.sneakup.controller.LoginController;
 import com.sneakup.model.Sessione;
 import com.sneakup.model.dao.db.UtenteDAOJDBC;
 import com.sneakup.model.domain.Utente;
-import com.sneakup.model.domain.Ruolo; // Aggiunto per gestire i ruoli
 import com.sneakup.util.AlertUtils;
-import com.sneakup.exception.SneakUpException; // Assicurati sia importato
+import com.sneakup.exception.SneakUpException;
+// IMPORT NECESSARI PER GESTIRE IL RITORNO ALLE VARIE PAGINE
+import com.sneakup.view.gui.cliente.VisualizzaCatalogoGUIController;
+import com.sneakup.view.gui.cliente.SelezioneCategoriaGUIController;
+
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -31,14 +34,20 @@ public class LoginGUIController {
     @FXML private PasswordField passwordField;
     @FXML private Region barraAnimata;
 
-    // Inizializzazione del Controller Applicativo per coerenza con Registrazione e Recupero
     private final LoginController loginController = new LoginController();
+    private String paginaPrecedente = null;
+    private String brandPrecedente = null;
 
     @FXML
     public void initialize() {
         if (barraAnimata != null) {
             barraAnimata.setOpacity(0.0);
         }
+    }
+
+    public void setProvenienza(String fxmlPath, String brand) {
+        this.paginaPrecedente = fxmlPath;
+        this.brandPrecedente = brand;
     }
 
     @FXML
@@ -52,24 +61,47 @@ public class LoginGUIController {
         }
 
         try {
-            // Utilizziamo UtenteDAOJDBC per recuperare l'utente dal DB
             UtenteDAOJDBC utenteDAO = new UtenteDAOJDBC();
             Utente u = utenteDAO.recuperaDatiUtente(inputEmail);
 
-            // Verifica credenziali confrontando la password inserita con quella nel DB
             if (u != null && u.getPassword().equals(pwd)) {
-
-                // Gestione del ruolo: se lo USERNAME nel DB è 'seller', lo trattiamo come ADMIN
                 String ruolo = u.getUsername().equalsIgnoreCase("seller") ? "ADMIN" : "CLIENTE";
                 Sessione.getInstance().login(u.getUsername(), ruolo);
 
-                System.out.println("Login effettuato: " + u.getUsername() + " con ruolo " + ruolo);
+                System.out.println("Login effettuato: " + u.getUsername());
 
-                // Navigazione differenziata basata sul ruolo
                 if (ruolo.equals("ADMIN")) {
                     navigaVerso(event, "/com/sneakup/view/AreaVenditore.fxml");
                 } else {
-                    navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
+                    // --- LOGICA DI RITORNO ALLA PAGINA PRECEDENTE ---
+                    if (paginaPrecedente != null) {
+                        try {
+                            FXMLLoader loader = new FXMLLoader(getClass().getResource(paginaPrecedente));
+                            Parent root = loader.load();
+
+                            // Controlliamo in quale pagina dobbiamo tornare e reimpostiamo i dati
+                            Object controller = loader.getController();
+
+                            // CASO 1: Torno al Catalogo (Nike/Adidas/Puma Home)
+                            if (controller instanceof VisualizzaCatalogoGUIController) {
+                                ((VisualizzaCatalogoGUIController) controller).setBrand(brandPrecedente);
+                            }
+                            // CASO 2: Torno alla Selezione Categorie (Corsa/Basket/Calcio)
+                            else if (controller instanceof SelezioneCategoriaGUIController) {
+                                // "CATEGORIE" è un testo di default per il sottotitolo
+                                ((SelezioneCategoriaGUIController) controller).setDati("CATEGORIE", brandPrecedente);
+                            }
+
+                            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                            stage.setScene(new Scene(root));
+                            stage.show();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
+                        }
+                    } else {
+                        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
+                    }
                 }
 
             } else {
@@ -77,40 +109,20 @@ public class LoginGUIController {
             }
 
         } catch (SneakUpException e) {
-            AlertUtils.mostraErrore("Errore di connessione al Database: " + e.getMessage());
-            e.printStackTrace();
+            AlertUtils.mostraErrore("Errore Database: " + e.getMessage());
         }
     }
 
-    // --- METODI DI NAVIGAZIONE ---
-
-    @FXML
-    private void handlePasswordDimenticata(ActionEvent event) {
-        navigaVerso(event, "/com/sneakup/view/RecuperoPassword.fxml");
-    }
-
-    @FXML
-    private void handleRegistrazione(ActionEvent event) {
-        navigaVerso(event, "/com/sneakup/view/Registrazione.fxml");
-    }
-
-    @FXML
-    private void handleReloadHome(ActionEvent event) {
-        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
-    }
-
-    @FXML
-    private void handleReloadHome(MouseEvent event) {
-        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
-    }
-
-    // --- ALTRI GESTORI ---
+    // --- ALTRI METODI DI NAVIGAZIONE E ANIMAZIONE (INVARIATI) ---
+    @FXML private void handlePasswordDimenticata(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/RecuperoPassword.fxml"); }
+    @FXML private void handleRegistrazione(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Registrazione.fxml"); }
+    @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
+    @FXML private void handleReloadHome(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
     @FXML private void handleLoginGoogle(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
     @FXML private void handleCarrello(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
     @FXML private void handleStatoOrdine(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
     @FXML private void handlePreferiti(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
 
-    // --- ANIMAZIONI ---
     @FXML
     public void mostraEmuoviBarra(MouseEvent event) {
         if (barraAnimata == null) return;

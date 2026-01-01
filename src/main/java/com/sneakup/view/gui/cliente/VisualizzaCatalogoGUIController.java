@@ -2,6 +2,7 @@ package com.sneakup.view.gui.cliente;
 
 import com.sneakup.model.Sessione;
 import com.sneakup.util.AlertUtils;
+import com.sneakup.view.gui.common.LoginGUIController; // Import necessario
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -10,6 +11,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
@@ -24,7 +26,6 @@ public class VisualizzaCatalogoGUIController {
     @FXML private Button btnHome, btnCarrello, btnStato, btnPreferiti, btnLogin;
     @FXML private Label lblUser;
 
-    // AGGIUNTO: Riferimento per cambiare il testo "NIKE" in "ADIDAS" o "PUMA"
     @FXML private Label lblBrandTitolo;
 
     private String brandSelezionato = "NIKE";
@@ -46,27 +47,38 @@ public class VisualizzaCatalogoGUIController {
         }
     }
 
-    /**
-     * Metodo chiamato dal BenvenutoGUIController per passare il brand scelto.
-     */
     public void setBrand(String brand) {
         this.brandSelezionato = brand;
-        // Aggiorna visivamente il titolo nella pagina
         if (lblBrandTitolo != null) {
             lblBrandTitolo.setText(brand.toUpperCase());
         }
     }
 
-    // --- METODI PER IL CATALOGO ---
-    @FXML private void handleUomo(ActionEvent event) {
-        // Usa la variabile dinamica invece di "NIKE" fisso
-        navigaVersoSelezione(event, "Uomo", brandSelezionato);
+    // --- METODO DI LOGIN MODIFICATO PER TORNARE QUI ---
+    @FXML
+    private void handleLoginGenerico(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
+            Parent root = loader.load();
+
+            // Otteniamo il controller del login
+            LoginGUIController loginCtrl = loader.getController();
+
+            // Gli diciamo: "Guarda che vengo da VisualizzaCatalogo.fxml e il brand è ..."
+            loginCtrl.setProvenienza("/com/sneakup/view/VisualizzaCatalogo.fxml", this.brandSelezionato);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            AlertUtils.mostraErrore("Impossibile caricare la pagina di login.");
+        }
     }
 
-    @FXML private void handleDonna(ActionEvent event) {
-        // Usa la variabile dinamica invece di "NIKE" fisso
-        navigaVersoSelezione(event, "Donna", brandSelezionato);
-    }
+    // --- ALTRI METODI ---
+    @FXML private void handleUomo(ActionEvent event) { navigaVersoSelezione(event, "Uomo", brandSelezionato); }
+    @FXML private void handleDonna(ActionEvent event) { navigaVersoSelezione(event, "Donna", brandSelezionato); }
 
     private void navigaVersoSelezione(ActionEvent event, String genere, String brand) {
         try {
@@ -79,17 +91,31 @@ public class VisualizzaCatalogoGUIController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // --- METODI PER LA NAVBAR ---
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
-    @FXML private void handleLoginGenerico(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Login.fxml"); }
-    @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/AreaPersonale.fxml"); }
+    @FXML
+    private void handleVaiAreaPersonale(MouseEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/AreaPersonale.fxml"));
+            Parent root = loader.load();
 
+            // Otteniamo il controller dell'area personale
+            AreaPersonaleGUIController areaCtrl = loader.getController();
+
+            // Passiamo le info: "Vengo dal catalogo" e "Il brand era..."
+            areaCtrl.setProvenienza("/com/sneakup/view/VisualizzaCatalogo.fxml", this.brandSelezionato);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     @FXML private void handleCarrello(ActionEvent event) { System.out.println("Carrello"); }
     @FXML private void handleStatoOrdine(ActionEvent event) { System.out.println("Stato Ordine"); }
     @FXML private void handlePreferiti(ActionEvent event) { System.out.println("Preferiti"); }
 
-    // --- ANIMAZIONI ---
     @FXML public void mostraEmuoviBarra(MouseEvent event) {
         Node source = (Node) event.getSource();
         Bounds b = source.localToScene(source.getBoundsInLocal());
@@ -99,7 +125,6 @@ public class VisualizzaCatalogoGUIController {
         barraAnimata.setPrefWidth(b.getWidth());
         barraAnimata.setOpacity(1.0);
     }
-
     @FXML public void nascondiBarra(MouseEvent event) { if (barraAnimata != null) barraAnimata.setOpacity(0.0); }
     @FXML public void sottolineaUser(MouseEvent event) { lblUser.setUnderline(true); }
     @FXML public void ripristinaUser(MouseEvent event) { lblUser.setUnderline(false); }

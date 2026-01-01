@@ -36,7 +36,7 @@ public class BenvenutoGUIController {
     @FXML private Button btnSearch;
     @FXML private Button btnLoginTop;
 
-    private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
+    //private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
 
     @FXML
     public void initialize() {
@@ -180,7 +180,7 @@ public class BenvenutoGUIController {
     // ==========================================
     //          LOGICA RICERCA
     // ==========================================
-
+/*
     @FXML
     private void handleCerca(ActionEvent event) {
         String keyword = searchField.getText().trim();
@@ -197,7 +197,7 @@ public class BenvenutoGUIController {
             mostraInfo("Errore", "Errore database.");
         }
     }
-
+*/
     @FXML
     private void handlePulisciRicerca(ActionEvent event) {
         searchField.setText("");

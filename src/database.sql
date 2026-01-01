@@ -1,70 +1,143 @@
-package com.sneakup.model.dao.db;
+-- ==========================================
+-- CREAZIONE DATABASE SNEAKUP
+-- ==========================================
+DROP DATABASE IF EXISTS sneakup_db;
+CREATE DATABASE sneakup_db;
+USE sneakup_db;
 
-import com.sneakup.exception.SneakUpException;
-import com.sneakup.model.domain.Utente;
-import java.sql.*;
+-- ==========================================
+-- 1. TABELLA UTENTE
+-- ==========================================
+DROP TABLE IF EXISTS UTENTE;
+CREATE TABLE UTENTE (
+    USERNAME VARCHAR(50) NOT NULL PRIMARY KEY,
+    EMAIL VARCHAR(100) NOT NULL UNIQUE,
+    PASSWORD VARCHAR(50) NOT NULL,
+    INDIRIZZO VARCHAR(100),
+    CITTA VARCHAR(50),
+    CAP VARCHAR(10),
+    NUMERO_CARTA VARCHAR(20),
+    SCADENZA_CARTA VARCHAR(10),
+    CVV VARCHAR(5)
+);
 
-public class UtenteDAOJDBC {
+-- ==========================================
+-- 2. TABELLA SCARPE (CON GENERE)
+-- ==========================================
+DROP TABLE IF EXISTS SCARPE;
+CREATE TABLE SCARPE (
+    idSCARPA INT AUTO_INCREMENT PRIMARY KEY,
+    modello VARCHAR(100) NOT NULL,
+    marca VARCHAR(50) NOT NULL,
+    categoria VARCHAR(50), -- Corsa, Basket, Calcio
+    genere VARCHAR(10) NOT NULL, -- UOMO, DONNA
+    taglia DOUBLE NOT NULL,
+    prezzo DOUBLE NOT NULL,
+    quantita INT NOT NULL DEFAULT 0,
+    descrizione TEXT,
+    url_immagine VARCHAR(255)
+);
 
-    private static final String URL = "jdbc:mysql://localhost:3306/sneakup_db";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
+-- ==========================================
+-- 3. TABELLA RECENSIONE
+-- ==========================================
+DROP TABLE IF EXISTS RECENSIONE;
+CREATE TABLE RECENSIONE (
+    idRECENSIONE INT AUTO_INCREMENT PRIMARY KEY,
+    idSCARPA INT NOT NULL,
+    USERNAME VARCHAR(50) NOT NULL,
+    voto INT NOT NULL CHECK (voto >= 1 AND voto <= 5),
+    testo TEXT,
+    data_recensione DATE DEFAULT (CURRENT_DATE),
+    FOREIGN KEY (idSCARPA) REFERENCES SCARPE(idSCARPA) ON DELETE CASCADE,
+    FOREIGN KEY (USERNAME) REFERENCES UTENTE(USERNAME) ON DELETE CASCADE
+);
 
-    public Utente recuperaDatiUtente(String identificativo) throws SneakUpException {
-        // Usiamo i nomi esatti delle colonne del tuo SQL: USERNAME e EMAIL
-        String query = "SELECT * FROM UTENTE WHERE USERNAME = ? OR EMAIL = ?";
+-- ==========================================
+-- POPOLAMENTO DATI - UTENTI
+-- ==========================================
+INSERT INTO UTENTE (USERNAME, EMAIL, PASSWORD, INDIRIZZO, CITTA, CAP, NUMERO_CARTA, SCADENZA_CARTA, CVV) VALUES
+('seller', 'admin@sneakup.com', 'admin', 'Via Centrale 1', 'Roma', '00100', '1111222233334444', '12/30', '999'),
+('mario', 'mario@email.com', '1234', 'Via Roma 10', 'Milano', '20100', '5555666677778888', '05/26', '123'),
+('lucia', 'lucia@email.com', '1234', 'Corso Italia 5', 'Napoli', '80100', '4444555566667777', '08/25', '456');
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(query)) {
 
-            ps.setString(1, identificativo);
-            ps.setString(2, identificativo);
+-- ==========================================
+-- POPOLAMENTO DATI - SCARPE (Aggiornato)
+-- ==========================================
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    // ATTENZIONE: i nomi dentro rs.getString devono essere MAIUSCOLI come nel tuo SQL
-                    return new Utente(
-                            rs.getString("USERNAME"),
-                            rs.getString("EMAIL"),
-                            rs.getString("PASSWORD"),
-                            rs.getString("INDIRIZZO"),
-                            rs.getString("CITTA"),
-                            rs.getString("CAP"),
-                            rs.getString("NUMERO_CARTA"),
-                            rs.getString("SCADENZA_CARTA"),
-                            rs.getString("CVV")
-                    );
-                }
-            }
-        } catch (SQLException e) {
-            throw new SneakUpException("Errore DB: " + e.getMessage());
-        }
-        return null; // Ritorna null se non trova nulla
-    }
+-- ----------------- NIKE -----------------
+-- Corsa
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Air Zoom Pegasus 40', 'NIKE', 'Corsa', 'UOMO', 42.5, 129.99, 15, 'La scarpa alata per eccellenza.', '/images/scarpa 1.png'),
+('Invincible 3', 'NIKE', 'Corsa', 'UOMO', 43.0, 189.99, 8, 'Massima ammortizzazione per lunghe distanze.', '/images/scarpa 1.png'),
+('React Infinity Run 4', 'NIKE', 'Corsa', 'DONNA', 38.0, 159.99, 12, 'Supporto morbido e reattivo.', '/images/nike_donna.jpg'),
+('Pegasus Turbo Next Nature', 'NIKE', 'Corsa', 'DONNA', 39.0, 149.99, 5, 'Leggerezza e velocità sostenibile.', '/images/nike_donna.jpg');
 
-    public void aggiornaUtente(Utente u) throws SneakUpException {
-        // Query aggiornata con i nomi colonne corretti del tuo database.sql
-        String query = "UPDATE UTENTE SET PASSWORD=?, INDIRIZZO=?, CITTA=?, CAP=?, NUMERO_CARTA=?, SCADENZA_CARTA=?, CVV=? WHERE USERNAME=?";
+-- Basket
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('LeBron XXI', 'NIKE', 'Basket', 'UOMO', 45.0, 199.99, 6, 'Costruita per il Re del campo.', '/images/nike_uomo.jpg'),
+('KD16', 'NIKE', 'Basket', 'UOMO', 44.0, 159.99, 10, 'Per i giocatori che vogliono tutto.', '/images/nike_uomo.jpg'),
+('G.T. Cut 3', 'NIKE', 'Basket', 'DONNA', 40.0, 189.99, 7, 'Progettata per creare spazio in velocità.', '/images/nike_donna.jpg'),
+('G.T. Hustle 2', 'NIKE', 'Basket', 'DONNA', 38.5, 169.99, 4, 'Reattività per ogni scatto.', '/images/nike_donna.jpg');
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
-             PreparedStatement ps = conn.prepareStatement(query)) {
+-- Calcio
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Mercurial Superfly 9 Elite', 'NIKE', 'Calcio', 'UOMO', 42.0, 279.99, 5, 'Velocità esplosiva in campo.', '/images/scarpa 3.png'),
+('Tiempo Legend 10 Elite', 'NIKE', 'Calcio', 'UOMO', 43.0, 249.99, 8, 'Tocco leggendario, pelle premium.', '/images/scarpa 3.png'),
+('Phantom Luna Elite', 'NIKE', 'Calcio', 'DONNA', 39.0, 259.99, 6, 'Precisione e agilità per il calcio femminile.', '/images/scarpa 3.png'),
+('Mercurial Vapor 15 Pro', 'NIKE', 'Calcio', 'DONNA', 37.5, 149.99, 10, 'Velocità accessibile.', '/images/scarpa 3.png');
 
-            ps.setString(1, u.getPassword());
-            ps.setString(2, u.getIndirizzo());
-            ps.setString(3, u.getCitta());
-            ps.setString(4, u.getCap());
-            ps.setString(5, u.getNumeroCarta());
-            ps.setString(6, u.getScadenzaCarta());
-            ps.setString(7, u.getCvv());
-            ps.setString(8, u.getUsername());
 
-            int affectedRows = ps.executeUpdate();
-            if (affectedRows == 0) {
-                throw new SneakUpException("Nessun utente aggiornato. Verifica lo username.");
-            }
+-- ----------------- ADIDAS -----------------
+-- Corsa
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Ultraboost Light', 'ADIDAS', 'Corsa', 'UOMO', 43.0, 180.00, 10, 'Energia epica, ora più leggera.', '/images/scarpa2.png'),
+('Adizero Boston 12', 'ADIDAS', 'Corsa', 'UOMO', 42.5, 150.00, 8, 'Per il giorno della gara e l\'allenamento.', '/images/scarpa2.png'),
+('Supernova Rise', 'ADIDAS', 'Corsa', 'DONNA', 38.0, 140.00, 15, 'Comfort quotidiano affidabile.', '/images/scarpa2.png'),
+('Adizero SL', 'ADIDAS', 'Corsa', 'DONNA', 39.0, 120.00, 12, 'Velocità per tutti.', '/images/scarpa2.png');
 
-        } catch (SQLException e) {
-            throw new SneakUpException("Errore durante l'aggiornamento: " + e.getMessage());
-        }
-    }
-}
+-- Basket
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Harden Vol. 7', 'ADIDAS', 'Basket', 'UOMO', 44.5, 160.00, 7, 'Stile unico e prestazioni MVP.', '/images/scarpa2.png'),
+('Dame 8 EXTPLY', 'ADIDAS', 'Basket', 'UOMO', 43.0, 130.00, 9, 'Per i momenti decisivi.', '/images/scarpa2.png'),
+('Exhibit Select', 'ADIDAS', 'Basket', 'DONNA', 40.0, 110.00, 8, 'Progettata specificamente per il piede femminile.', '/images/scarpa2.png');
+
+-- Calcio
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Predator Elite', 'ADIDAS', 'Calcio', 'UOMO', 43.5, 249.99, 4, 'Controllo e potenza di tiro.', '/images/scarpa 3.png'),
+('X Crazyfast.1', 'ADIDAS', 'Calcio', 'UOMO', 42.0, 219.99, 6, 'Leggerezza per la massima velocità.', '/images/scarpa 3.png'),
+('Copa Pure.1', 'ADIDAS', 'Calcio', 'DONNA', 38.5, 229.99, 5, 'Tocco puro e comfort.', '/images/scarpa 3.png');
+
+
+-- ----------------- PUMA -----------------
+-- Corsa
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Deviate Nitro 2', 'PUMA', 'Corsa', 'UOMO', 43.0, 159.99, 10, 'Piastra in carbonio per la massima propulsione.', '/images/scarpa 1.png'),
+('Magnify Nitro 2', 'PUMA', 'Corsa', 'UOMO', 42.0, 139.99, 8, 'Massima ammortizzazione NITRO.', '/images/scarpa 1.png'),
+('Run XX Nitro', 'PUMA', 'Corsa', 'DONNA', 38.0, 129.99, 12, 'Progettata per la biomeccanica femminile.', '/images/scarpa 1.png'),
+('Velocity Nitro 2', 'PUMA', 'Corsa', 'DONNA', 39.0, 119.99, 15, 'Ammortizzazione reattiva e versatile.', '/images/scarpa 1.png');
+
+-- Basket
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('MB.03 LaMelo Ball', 'PUMA', 'Basket', 'UOMO', 45.0, 169.99, 3, 'Stile spaziale e performance.', '/images/scarpa2.png'),
+('TRC Blaze Court', 'PUMA', 'Basket', 'UOMO', 43.0, 119.99, 6, 'Ispirata al running, fatta per il basket.', '/images/scarpa2.png'),
+('Stewie 2', 'PUMA', 'Basket', 'DONNA', 40.0, 139.99, 5, 'La scarpa firmata Breanna Stewart.', '/images/scarpa2.png');
+
+-- Calcio
+INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Future 7 Ultimate', 'PUMA', 'Calcio', 'UOMO', 42.5, 219.99, 7, 'Agilità creativa e calzata perfetta.', '/images/scarpa 3.png'),
+('King Ultimate', 'PUMA', 'Calcio', 'UOMO', 43.0, 199.99, 9, 'Controllo classico, materiali moderni.', '/images/scarpa 3.png'),
+('Ultra Match', 'PUMA', 'Calcio', 'DONNA', 38.0, 89.99, 10, 'Velocità accessibile, calzata femminile.', '/images/scarpa 3.png');
+
+
+-- ==========================================
+-- POPOLAMENTO DATI - RECENSIONI
+-- ==========================================
+INSERT INTO RECENSIONE (idSCARPA, USERNAME, voto, testo) VALUES
+(1, 'mario', 5, 'Le Pegasus non deludono mai, ottime per allenarsi.'),
+(3, 'lucia', 4, 'Molto comode, ma preferisco una scarpa più secca.'),
+(5, 'mario', 5, 'LeBron è il Re, scarpa incredibile!'),
+(12, 'mario', 4, 'Ottima trazione, un po'' pesanti.'),
+(16, 'lucia', 5, 'Finalmente una scarpa da corsa che si adatta al mio piede.'),
+(21, 'mario', 5, 'Design pazzesco, LaMelo spacca!');
