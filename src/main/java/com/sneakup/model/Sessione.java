@@ -1,57 +1,125 @@
 package com.sneakup.model;
 
+import com.sneakup.model.dao.db.PreferitiDAOJDBC;
+import com.sneakup.model.dao.db.CarrelloDAOJDBC;
+import com.sneakup.model.domain.Scarpa;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Sessione {
 
-    private static Sessione instance;
+    private static Sessione instance = null;
+
     private String username;
-    private String ruolo; // Gestisce "CLIENTE" o "ADMIN"
+    private String ruolo;
+    private boolean loggato;
 
-    private Sessione() {}
+    private List<Scarpa> listaPreferiti;
+    private List<Scarpa> carrello;
 
-    public static Sessione getInstance() {
-        if (instance == null) {
-            instance = new Sessione();
-        }
+    private final PreferitiDAOJDBC preferitiDAO;
+    private final CarrelloDAOJDBC carrelloDAO;
+
+    private Sessione() {
+        this.loggato = false;
+        this.listaPreferiti = new ArrayList<>();
+        this.carrello = new ArrayList<>();
+        this.preferitiDAO = new PreferitiDAOJDBC();
+        this.carrelloDAO = new CarrelloDAOJDBC();
+    }
+
+    public static synchronized Sessione getInstance() {
+        if (instance == null) instance = new Sessione();
         return instance;
     }
 
     /**
-     * Registra i dati dell'utente loggato nella sessione.
+     * Sincronizza i dati locali con il DB al momento del login.
      */
     public void login(String username, String ruolo) {
+        // Backup temporaneo del carrello creato da "ospite"
+        List<Scarpa> carrelloOspite = new ArrayList<>(this.carrello);
+
         this.username = username;
         this.ruolo = ruolo;
+        this.loggato = true;
+
+        // 1. Carica dati dal DB
+        this.listaPreferiti = preferitiDAO.caricaPreferiti(username);
+        this.carrello = carrelloDAO.caricaCarrello(username);
+
+        // 2. Unisce il carrello dell'ospite con quello dell'utente nel DB
+        for (Scarpa s : carrelloOspite) {
+            // Se vogliamo permettere duplicati (es. due paia dello stesso modello), aggiungiamo sempre
+            this.carrello.add(s);
+            carrelloDAO.salva(this.username, s.getId());
+        }
+
+        System.out.println("Sessione attiva per: " + username);
     }
 
-    /**
-     * Pulisce i dati della sessione.
-     */
     public void logout() {
         this.username = null;
         this.ruolo = null;
+        this.loggato = false;
+        this.listaPreferiti.clear();
+        this.carrello.clear();
     }
 
     // --- GETTERS ---
+    public boolean isLoggato() { return loggato; }
+    public String getUsername() { return username; }
+    public String getRuolo() { return ruolo; }
+    public List<Scarpa> getPreferiti() { return listaPreferiti; }
+    public List<Scarpa> getCarrello() { return carrello; }
 
-    public String getUsername() {
-        return username;
+    // --- LOGICA PREFERITI ---
+    public boolean isPreferito(Scarpa s) {
+        if (s == null) return false;
+        return listaPreferiti.stream().anyMatch(p -> p.getId() == s.getId());
     }
 
-    public String getRuolo() {
-        return ruolo;
+    public void aggiungiPreferito(Scarpa s) {
+        if (loggato && s != null && !isPreferito(s)) {
+            listaPreferiti.add(s);
+            preferitiDAO.salva(this.username, s.getId());
+        }
     }
 
-    /**
-     * Verifica se un utente è attualmente autenticato.
-     */
-    public boolean isLoggato() {
-        return username != null;
+    public void rimuoviPreferito(Scarpa s) {
+        if (loggato && s != null) {
+            listaPreferiti.removeIf(p -> p.getId() == s.getId());
+            preferitiDAO.rimuovi(this.username, s.getId());
+        }
     }
 
-    /**
-     * Verifica se l'utente loggato è un amministratore.
-     */
-    public boolean isAdmin() {
-        return "ADMIN".equalsIgnoreCase(this.ruolo);
+    // --- LOGICA CARRELLO ---
+    public void aggiungiAlCarrello(Scarpa s) {
+        if (s == null) return;
+        carrello.add(s);
+        if (loggato) {
+            carrelloDAO.salva(this.username, s.getId());
+        }
+    }
+
+    public void rimuoviDalCarrello(Scarpa s) {
+        if (s == null) return;
+        // Rimuove la prima occorrenza trovata
+        for (int i = 0; i < carrello.size(); i++) {
+            if (carrello.get(i).getId() == s.getId()) {
+                carrello.remove(i);
+                break;
+            }
+        }
+        if (loggato) {
+            carrelloDAO.rimuovi(this.username, s.getId());
+        }
+    }
+
+    public void svuotaCarrello() {
+        carrello.clear();
+        if (loggato) {
+            carrelloDAO.svuota(this.username);
+        }
     }
 }

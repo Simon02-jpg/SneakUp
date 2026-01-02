@@ -2,24 +2,19 @@ package com.sneakup.model.dao.db;
 
 import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.domain.Utente;
+import com.sneakup.util.DBConnection; // Import della tua utility centralizzata
 
 import java.sql.*;
 
 public class UtenteDAOJDBC {
 
-    // CAMBIA QUI CON I TUOI DATI DEL DB
-    private static final String URL = "jdbc:mysql://localhost:3306/sneakup_db";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
-
     public Utente recuperaDatiUtente(String identificativo) throws SneakUpException {
-        // MODIFICA: Cerca in entrambe le colonne
+        // Cerca l'utente tramite username o email
         String query = "SELECT * FROM Utente WHERE username = ? OR email = ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
-            // Imposta lo stesso valore (quello scritto dall'utente) per entrambi i parametri
             ps.setString(1, identificativo);
             ps.setString(2, identificativo);
 
@@ -45,10 +40,10 @@ public class UtenteDAOJDBC {
     }
 
     public void aggiornaUtente(Utente u) throws SneakUpException {
-        // Aggiorniamo tutto tranne lo username (che è chiave primaria)
+        // Aggiorniamo i dati del profilo e della carta di credito
         String query = "UPDATE Utente SET email=?, password=?, indirizzo=?, citta=?, cap=?, numero_carta=?, scadenza_carta=?, cvv=? WHERE username=?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, u.getEmail());
@@ -64,13 +59,13 @@ public class UtenteDAOJDBC {
             ps.executeUpdate();
 
         } catch (SQLException e) {
-            throw new SneakUpException("Errore durante il salvataggio: " + e.getMessage());
+            throw new SneakUpException("Errore durante il salvataggio delle modifiche: " + e.getMessage());
         }
     }
 
     public void eliminaUtente(String username) throws SneakUpException {
         String query = "DELETE FROM Utente WHERE username = ?";
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, username);
@@ -81,23 +76,22 @@ public class UtenteDAOJDBC {
         }
     }
 
-    // Aggiungi questo metodo nel tuo UtenteDAOJDBC.java
     public void salvaNuovoUtente(Utente u) throws SneakUpException {
-        // Usiamo i nomi esatti delle colonne del tuo database.sql
+        // Inserimento iniziale (Registrazione)
         String query = "INSERT INTO UTENTE (USERNAME, PASSWORD, ROLE, EMAIL) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, u.getUsername());
             ps.setString(2, u.getPassword());
-            ps.setInt(3, 1); // 1 = Ruolo Cliente come da tuo SQL
+            ps.setInt(3, 1); // 1 = Ruolo Cliente (Default)
             ps.setString(4, u.getEmail());
 
             ps.executeUpdate();
-            System.out.println("DEBUG: Utente inserito correttamente nel DB");
+            System.out.println("DEBUG: Registrazione completata con successo nel DB");
         } catch (SQLException e) {
-            throw new SneakUpException("Errore SQL durante l'inserimento: " + e.getMessage());
+            throw new SneakUpException("Errore durante la registrazione: " + e.getMessage());
         }
     }
 }

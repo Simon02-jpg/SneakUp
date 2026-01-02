@@ -2,6 +2,7 @@ package com.sneakup.view.gui.common;
 
 import com.sneakup.controller.LoginController;
 import com.sneakup.util.AlertUtils;
+import com.sneakup.view.gui.cliente.CarrelloGUIController;
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,6 +19,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.scene.control.Alert;
 
 import java.io.IOException;
 
@@ -75,6 +77,16 @@ public class RecuperoPasswordGUIController {
         }
     }
 
+    private void navigaVerso(String fxmlPath, java.util.EventObject event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
     // --- NAVIGAZIONE HOME (SDOPPIATA PER FAR FUNZIONARE FXML) ---
 
     // Metodo chiamato dal LOGO (onMouseClicked)
@@ -115,7 +127,24 @@ public class RecuperoPasswordGUIController {
     }
 
     // --- MENU VARI ---
-    @FXML public void handleCarrello(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
+            Parent root = loader.load();
+
+            // Passiamo la provenienza di default (Benvenuto)
+            CarrelloGUIController ctrl = loader.getController();
+            ctrl.setProvenienza("/com/sneakup/view/RecuperoPassword.fxml", null, null, null, null,null);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Errore Carrello: " + e.getMessage()).showAndWait();
+        }
+    }
+
     @FXML public void handleStatoOrdine(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
     @FXML public void handlePreferiti(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
 

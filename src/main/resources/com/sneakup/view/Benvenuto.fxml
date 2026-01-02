@@ -102,6 +102,7 @@
                                 <StackPane>
                                     <children>
                                         <TextField fx:id="searchField"
+                                                   onAction="#handleCerca"
                                                    prefHeight="60.0" prefWidth="700.0"
                                                    promptText="Cerca..."
                                                    style="-fx-background-color: white; -fx-border-color: #cccccc; -fx-border-radius: 5 0 0 5; -fx-font-size: 20px; -fx-padding: 0 45 0 20;" />

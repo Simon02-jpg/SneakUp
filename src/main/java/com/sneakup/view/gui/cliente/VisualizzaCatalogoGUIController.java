@@ -24,16 +24,15 @@ import java.io.IOException;
 public class VisualizzaCatalogoGUIController {
 
     @FXML private Button btnLogin, btnHome, btnCarrello, btnStato, btnPreferiti;
-    @FXML private Label lblUser;
+    @FXML private Label lblUser, lblBrandTitolo; // Aggiunto lblBrandTitolo
     @FXML private Region barraAnimata;
 
-    private String brandCorrente = "NIKE"; // Default
+    private String brandCorrente = "NIKE";
 
     @FXML
     public void initialize() {
         if (barraAnimata != null) barraAnimata.setOpacity(0.0);
 
-        // Gestione Utente Loggato
         if (Sessione.getInstance().isLoggato()) {
             if (btnLogin != null) {
                 btnLogin.setVisible(false);
@@ -47,19 +46,24 @@ public class VisualizzaCatalogoGUIController {
         }
     }
 
+    /**
+     * Imposta il brand e aggiorna il testo dell'interfaccia
+     */
     public void setBrand(String brand) {
         this.brandCorrente = brand;
+        if (lblBrandTitolo != null) {
+            lblBrandTitolo.setText(brand.toUpperCase()); // Rende il titolo dinamico
+        }
     }
 
-    // --- GESTIONE NAVIGAZIONE CATEGORIE (UOMO/DONNA) ---
     @FXML
     private void handleUomo(ActionEvent event) {
-        navigaVersoSelezione(event, "UOMO");
+        navigaVersoSelezione(event, "uomo");
     }
 
     @FXML
     private void handleDonna(ActionEvent event) {
-        navigaVersoSelezione(event, "DONNA");
+        navigaVersoSelezione(event, "donna");
     }
 
     private void navigaVersoSelezione(ActionEvent event, String genere) {
@@ -75,44 +79,52 @@ public class VisualizzaCatalogoGUIController {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            mostraInfo("Errore", "Impossibile caricare la selezione categorie.");
         }
     }
 
-    // --- LOGIN ---
+    // --- CARRELLO (NUOVO: Cliccabile dall'header) ---
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
+            Parent root = loader.load();
+
+            CarrelloGUIController ctrl = loader.getController();
+            // Passiamo il brand corrente (es. NIKE)
+            ctrl.setProvenienza("/com/sneakup/view/VisualizzaCatalogo.fxml", this.brandCorrente, null, null, null,null);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void handleLoginGenerico(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
             Parent root = loader.load();
-
             LoginGUIController loginCtrl = loader.getController();
-
-            // 4 Parametri: Pagina, Brand, Genere (null), Categoria (null)
-            loginCtrl.setProvenienza("/com/sneakup/view/VisualizzaCatalogo.fxml",
-                    this.brandCorrente,
-                    null,
-                    null);
-
+            loginCtrl.setProvenienza("/com/sneakup/view/VisualizzaCatalogo.fxml", this.brandCorrente, null, null);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            mostraInfo("Errore", "Impossibile aprire la pagina di login.");
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // --- ALTRI METODI DI NAVIGAZIONE ---
+    @FXML
+    private void handlePreferiti(ActionEvent event) {
+        if (!Sessione.getInstance().isLoggato()) {
+            new Alert(Alert.AlertType.WARNING, "Devi effettuare il login per vedere i preferiti.").showAndWait();
+            return;
+        }
+        navigaVerso("/com/sneakup/view/Preferiti.fxml", event);
+    }
+
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", event); }
-    @FXML private void handleIndietro(ActionEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
-
-    // --- NAVBAR PLACEHOLDER ---
-    @FXML private void handleCarrello(ActionEvent event) { mostraInfo("Carrello", "In arrivo"); }
-    @FXML private void handleStatoOrdine(ActionEvent event) { mostraInfo("Stato", "In arrivo"); }
-    @FXML private void handlePreferiti(ActionEvent event) { mostraInfo("Preferiti", "In arrivo"); }
+    @FXML private void handleStatoOrdine(ActionEvent event) { new Alert(Alert.AlertType.INFORMATION, "Servizio in arrivo").showAndWait(); }
 
     // --- ANIMAZIONI ---
     @FXML public void mostraEmuoviBarra(MouseEvent event) {
@@ -129,8 +141,6 @@ public class VisualizzaCatalogoGUIController {
     @FXML public void ripristinaUser(MouseEvent e) { lblUser.setUnderline(false); }
     @FXML public void iconaEntra(MouseEvent e) { zoom((Node) e.getSource(), 1.1); }
     @FXML public void iconaEsce(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
-
-    // --- QUESTI SONO I METODI CHE MANCAVANO E CAUSAVANO L'ERRORE ---
     @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.05); }
     @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
 
@@ -147,9 +157,5 @@ public class VisualizzaCatalogoGUIController {
             stage.setScene(new Scene(root));
             stage.show();
         } catch(IOException ex) { ex.printStackTrace(); }
-    }
-
-    private void mostraInfo(String t, String m) {
-        new Alert(Alert.AlertType.INFORMATION, m).showAndWait();
     }
 }

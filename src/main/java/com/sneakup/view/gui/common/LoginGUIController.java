@@ -6,10 +6,12 @@ import com.sneakup.model.dao.db.UtenteDAOJDBC;
 import com.sneakup.model.domain.Utente;
 import com.sneakup.util.AlertUtils;
 import com.sneakup.exception.SneakUpException;
+import com.sneakup.view.gui.cliente.CarrelloGUIController;
 import com.sneakup.view.gui.cliente.ListaProdottiGUIController;
 import com.sneakup.view.gui.cliente.SelezioneCategoriaGUIController;
 import com.sneakup.view.gui.cliente.VisualizzaCatalogoGUIController;
 
+import javafx.scene.control.Alert;
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -133,7 +135,24 @@ public class LoginGUIController {
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
     @FXML private void handleReloadHome(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
     @FXML private void handleLoginGoogle(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
-    @FXML private void handleCarrello(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
+            Parent root = loader.load();
+
+            // Passiamo la provenienza di default (Benvenuto)
+            CarrelloGUIController ctrl = loader.getController();
+            ctrl.setProvenienza("/com/sneakup/view/Login.fxml", null, null, null, null,null);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Errore Carrello: " + e.getMessage()).showAndWait();
+        }
+    }
+
     @FXML private void handleStatoOrdine(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
     @FXML private void handlePreferiti(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
 

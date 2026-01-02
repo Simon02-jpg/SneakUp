@@ -3,6 +3,7 @@ package com.sneakup.view.gui.common;
 import com.sneakup.controller.LoginController;
 import com.sneakup.model.domain.Ruolo;
 import com.sneakup.util.AlertUtils;
+import com.sneakup.view.gui.cliente.CarrelloGUIController;
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,6 +20,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.scene.control.Alert;
 
 import java.io.IOException;
 
@@ -81,7 +83,24 @@ public class RegistrazioneGUIController {
     // Per compatibilità con onAction nel FXML
     @FXML private void tornaAlLogin(ActionEvent event) { cambiaPagina("/com/sneakup/view/Login.fxml", event); }
 
-    @FXML private void handleCarrello(ActionEvent event) { AlertUtils.mostraInfo("Accedi prima."); }
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
+            Parent root = loader.load();
+
+            // Passiamo la provenienza di default (Benvenuto)
+            CarrelloGUIController ctrl = loader.getController();
+            ctrl.setProvenienza("/com/sneakup/view/Registrazione.fxml", null, null, null, null,null);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Errore Carrello: " + e.getMessage()).showAndWait();
+        }
+    }
+
     @FXML private void handleStatoOrdine(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
     @FXML private void handlePreferiti(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
 
@@ -128,5 +147,15 @@ public class RegistrazioneGUIController {
             e.printStackTrace();
             AlertUtils.mostraErrore("Errore navigazione: " + e.getMessage());
         }
+    }
+
+    private void navigaVerso(String fxmlPath, java.util.EventObject event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) { e.printStackTrace(); }
     }
 }

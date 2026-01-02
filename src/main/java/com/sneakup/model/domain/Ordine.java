@@ -12,10 +12,16 @@ public class Ordine {
     private String indirizzoSpedizione;
     private String stato; // Es. "IN_ELABORAZIONE", "SPEDITO"
 
+    // 1. AGGIUNTO COSTRUTTORE VUOTO (Indispensabile per il DAO)
+    public Ordine() {
+        this.scarpeAcquistate = new ArrayList<>();
+        this.dataOrdine = LocalDate.now();
+    }
+
+    // Il tuo costruttore originale (lo teniamo per quando crei un nuovo ordine da codice)
     public Ordine(int id, List<Scarpa> scarpe, double totale, String indirizzo) {
         this.id = id;
         this.dataOrdine = LocalDate.now();
-        // Creiamo una copia della lista per sicurezza
         this.scarpeAcquistate = new ArrayList<>(scarpe);
         this.totalePagato = totale;
         this.indirizzoSpedizione = indirizzo;
@@ -27,10 +33,16 @@ public class Ordine {
     public void setId(int id) { this.id = id; }
 
     public LocalDate getDataOrdine() { return dataOrdine; }
+    // 2. AGGIUNTO SETTER PER DATA (Per caricarla dal DB)
+    public void setDataOrdine(LocalDate dataOrdine) { this.dataOrdine = dataOrdine; }
 
     public List<Scarpa> getScarpeAcquistate() { return scarpeAcquistate; }
+    // 3. AGGIUNTO SETTER PER LISTA SCARPE
+    public void setScarpeAcquistate(List<Scarpa> scarpeAcquistate) { this.scarpeAcquistate = scarpeAcquistate; }
 
     public double getTotalePagato() { return totalePagato; }
+    // 4. AGGIUNTO SETTER PER TOTALE (Risolve l'errore nel DAO)
+    public void setTotalePagato(double totalePagato) { this.totalePagato = totalePagato; }
 
     public String getIndirizzoSpedizione() { return indirizzoSpedizione; }
     public void setIndirizzoSpedizione(String indirizzoSpedizione) { this.indirizzoSpedizione = indirizzoSpedizione; }

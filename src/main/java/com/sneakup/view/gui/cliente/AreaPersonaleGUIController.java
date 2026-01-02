@@ -1,13 +1,13 @@
 package com.sneakup.view.gui.cliente;
 
 import com.sneakup.model.Sessione;
-import com.sneakup.util.AlertUtils;
+import com.sneakup.view.gui.common.LoginGUIController; // IMPORT AGGIUNTO
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
-import javafx.geometry.Point2D; // IMPORT FONDAMENTALE AGGIUNTO
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -33,6 +33,8 @@ public class AreaPersonaleGUIController {
 
     @FXML
     public void initialize() {
+        if (barraAnimata != null) barraAnimata.setOpacity(0.0);
+
         // Gestione Header
         if (Sessione.getInstance().isLoggato()) {
             if (btnLogin != null) {
@@ -45,7 +47,7 @@ public class AreaPersonaleGUIController {
                 lblUser.setManaged(true);
             }
         }
-        // Rimozione focus
+        // Rimozione focus per estetica
         if (btnHome != null) btnHome.setFocusTraversable(false);
         if (btnCarrello != null) btnCarrello.setFocusTraversable(false);
         if (btnStato != null) btnStato.setFocusTraversable(false);
@@ -79,23 +81,14 @@ public class AreaPersonaleGUIController {
         }
     }
 
-    // --- ANIMAZIONE BARRA (METODO CORRETTO) ---
+    // --- ANIMAZIONE BARRA ---
     @FXML
     private void mostraEmuoviBarra(MouseEvent event) {
         if (barraAnimata == null) return;
-
         Node source = (Node) event.getSource();
-
-        // 1. Calcoliamo i bordi del bottone nella scena
         Bounds b = source.localToScene(source.getBoundsInLocal());
-
-        // 2. Otteniamo il genitore della barra per convertire le coordinate
         Parent p = barraAnimata.getParent();
-
-        // 3. Convertiamo le coordinate del bottone in coordinate locali per la barra
         Point2D loc = p.sceneToLocal(b.getMinX(), b.getMinY());
-
-        // 4. Applichiamo la posizione
         barraAnimata.setLayoutX(loc.getX());
         barraAnimata.setPrefWidth(b.getWidth());
         barraAnimata.setOpacity(1.0);
@@ -104,9 +97,49 @@ public class AreaPersonaleGUIController {
     @FXML private void nascondiBarra(MouseEvent event) { if (barraAnimata != null) barraAnimata.setOpacity(0.0); }
 
     // --- NAVIGAZIONE ---
-    @FXML private void handleReloadHome() { navigaVerso("/com/sneakup/view/Benvenuto.fxml", null); }
-    @FXML private void handleLoginGenerico(ActionEvent event) { navigaVerso("/com/sneakup/view/Login.fxml", event); }
-    @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", event); }
+
+    // TASTO PREFERITI (AGGIORNATO)
+    // --- TROVA QUESTO METODO E SOSTITUISCI IL CONTENUTO ---
+    @FXML
+    private void handlePreferiti(ActionEvent event) {
+        if (Sessione.getInstance().isLoggato()) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Preferiti.fxml"));
+                Parent root = loader.load();
+
+                PreferitiGUIController ctrl = loader.getController();
+
+                // MODIFICA QUI: Chiamata semplificata che Maven accetta
+                ctrl.setProvenienza("/com/sneakup/view/AreaPersonale.fxml");
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            new Alert(Alert.AlertType.INFORMATION, "Accedi per vedere i tuoi preferiti").showAndWait();
+        }
+    }
+
+    @FXML private void handleReloadHome(ActionEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
+    @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", null); } // Adattato per MouseEvent
+
+    // LOGIN (AGGIORNATO CON setProvenienza)
+    @FXML
+    private void handleLoginGenerico(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
+            Parent root = loader.load();
+            LoginGUIController loginCtrl = loader.getController();
+            loginCtrl.setProvenienza("/com/sneakup/view/AreaPersonale.fxml", null, null, null);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", null); }
 
     @FXML
     private void handleLogout(ActionEvent event) {
@@ -114,11 +147,34 @@ public class AreaPersonaleGUIController {
         navigaVerso("/com/sneakup/view/Benvenuto.fxml", event);
     }
 
-    @FXML private void handlePreferiti(ActionEvent event) { navigaVerso("/com/sneakup/view/VisualizzaCatalogo.fxml", event); }
     @FXML private void handleIMieiOrdini(ActionEvent event) { mostraInfo("Storico Ordini", "Funzionalità in arrivo."); }
     @FXML private void handleIMieiDati(ActionEvent event) { navigaVerso("/com/sneakup/view/DatiPersonali.fxml", event); }
-    @FXML private void handleCarrello(ActionEvent event) { mostraInfo("Carrello", "Vai al carrello."); }
-    @FXML private void handleStatoOrdine(ActionEvent event) { mostraInfo("Info", "Traccia spedizione."); }
+    @FXML
+    private void handleCarrello(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
+            Parent root = loader.load();
+
+            CarrelloGUIController ctrl = loader.getController();
+
+            // AGGIUNTO IL SESTO PARAMETRO (null) ALLA FINE
+            ctrl.setProvenienza(
+                    "/com/sneakup/view/AreaPersonale.fxml",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null  // <--- Questo è il 6° parametro (Scarpa) che mancava
+            );
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Errore Carrello: " + e.getMessage()).showAndWait();
+        }
+    }
+    @FXML private void handleStatoOrdine(ActionEvent event) { mostraInfo("Info", "Funzionalità in arrivo."); }
 
     // --- ANIMAZIONI ---
     @FXML private void sottolineaUser(MouseEvent event) { lblUser.setUnderline(true); }
@@ -127,6 +183,8 @@ public class AreaPersonaleGUIController {
     @FXML private void iconaEsce(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
     @FXML private void animazioneEntraCard(MouseEvent event) { zoom((Node) event.getSource(), 1.05); }
     @FXML private void animazioneEsceCard(MouseEvent event) { zoom((Node) event.getSource(), 1.0); }
+    @FXML public void animazioneEntraBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.05); }
+    @FXML public void animazioneEsceBottone(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
 
     private void zoom(Node n, double s) {
         ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
@@ -138,6 +196,7 @@ public class AreaPersonaleGUIController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
             Stage stage;
+            // Gestione mista ActionEvent / MouseEvent
             if (event != null && event.getSource() instanceof Node) {
                 stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             } else {

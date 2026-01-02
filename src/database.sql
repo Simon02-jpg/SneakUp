@@ -54,6 +54,29 @@ CREATE TABLE RECENSIONE (
 );
 
 -- ==========================================
+-- 4. TABELLA PREFERITI (AGGIUNTA PER LA TUA NUOVA FUNZIONALITÀ)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS PREFERITI (
+    utente VARCHAR(50) NOT NULL,
+    id_scarpa INT NOT NULL,
+    PRIMARY KEY (utente, id_scarpa),
+    FOREIGN KEY (utente) REFERENCES UTENTE(USERNAME) ON DELETE CASCADE,
+    FOREIGN KEY (id_scarpa) REFERENCES SCARPE(idSCARPA) ON DELETE CASCADE
+);
+
+-- ==========================================
+-- 5. TABELLA CARRELLO (INDISPENSABILE PER IL SALVATAGGIO)
+-- ==========================================
+DROP TABLE IF EXISTS carrello;
+CREATE TABLE carrello (
+    username VARCHAR(50) NOT NULL,
+    id_scarpa INT NOT NULL,
+    PRIMARY KEY (username, id_scarpa), -- Se vuoi permettere duplicati (es. 2 paia uguali), rimuovi questa PK
+    FOREIGN KEY (username) REFERENCES UTENTE(USERNAME) ON DELETE CASCADE,
+    FOREIGN KEY (id_scarpa) REFERENCES SCARPE(idSCARPA) ON DELETE CASCADE
+);
+
+-- ==========================================
 -- POPOLAMENTO DATI - UTENTI
 -- ==========================================
 INSERT INTO UTENTE (USERNAME, EMAIL, PASSWORD, INDIRIZZO, CITTA, CAP, NUMERO_CARTA, SCADENZA_CARTA, CVV) VALUES
@@ -61,75 +84,50 @@ INSERT INTO UTENTE (USERNAME, EMAIL, PASSWORD, INDIRIZZO, CITTA, CAP, NUMERO_CAR
 ('mario', 'mario@email.com', '1234', 'Via Roma 10', 'Milano', '20100', '5555666677778888', '05/26', '123'),
 ('lucia', 'lucia@email.com', '1234', 'Corso Italia 5', 'Napoli', '80100', '4444555566667777', '08/25', '456');
 
-
 -- ==========================================
--- POPOLAMENTO DATI - SCARPE (Aggiornato)
+-- POPOLAMENTO DATI - SCARPE
 -- ==========================================
 
 -- ----------------- NIKE -----------------
--- Corsa
 INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
 ('Air Zoom Pegasus 40', 'NIKE', 'Corsa', 'UOMO', 42.5, 129.99, 15, 'La scarpa alata per eccellenza.', '/images/scarpa 1.png'),
 ('Invincible 3', 'NIKE', 'Corsa', 'UOMO', 43.0, 189.99, 8, 'Massima ammortizzazione per lunghe distanze.', '/images/scarpa 1.png'),
 ('React Infinity Run 4', 'NIKE', 'Corsa', 'DONNA', 38.0, 159.99, 12, 'Supporto morbido e reattivo.', '/images/nike_donna.jpg'),
-('Pegasus Turbo Next Nature', 'NIKE', 'Corsa', 'DONNA', 39.0, 149.99, 5, 'Leggerezza e velocità sostenibile.', '/images/nike_donna.jpg');
-
--- Basket
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Pegasus Turbo Next Nature', 'NIKE', 'Corsa', 'DONNA', 39.0, 149.99, 5, 'Leggerezza e velocità sostenibile.', '/images/nike_donna.jpg'),
 ('LeBron XXI', 'NIKE', 'Basket', 'UOMO', 45.0, 199.99, 6, 'Costruita per il Re del campo.', '/images/nike_uomo.jpg'),
 ('KD16', 'NIKE', 'Basket', 'UOMO', 44.0, 159.99, 10, 'Per i giocatori che vogliono tutto.', '/images/nike_uomo.jpg'),
 ('G.T. Cut 3', 'NIKE', 'Basket', 'DONNA', 40.0, 189.99, 7, 'Progettata per creare spazio in velocità.', '/images/nike_donna.jpg'),
-('G.T. Hustle 2', 'NIKE', 'Basket', 'DONNA', 38.5, 169.99, 4, 'Reattività per ogni scatto.', '/images/nike_donna.jpg');
-
--- Calcio
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('G.T. Hustle 2', 'NIKE', 'Basket', 'DONNA', 38.5, 169.99, 4, 'Reattività per ogni scatto.', '/images/nike_donna.jpg'),
 ('Mercurial Superfly 9 Elite', 'NIKE', 'Calcio', 'UOMO', 42.0, 279.99, 5, 'Velocità esplosiva in campo.', '/images/scarpa 3.png'),
 ('Tiempo Legend 10 Elite', 'NIKE', 'Calcio', 'UOMO', 43.0, 249.99, 8, 'Tocco leggendario, pelle premium.', '/images/scarpa 3.png'),
 ('Phantom Luna Elite', 'NIKE', 'Calcio', 'DONNA', 39.0, 259.99, 6, 'Precisione e agilità per il calcio femminile.', '/images/scarpa 3.png'),
 ('Mercurial Vapor 15 Pro', 'NIKE', 'Calcio', 'DONNA', 37.5, 149.99, 10, 'Velocità accessibile.', '/images/scarpa 3.png');
 
-
 -- ----------------- ADIDAS -----------------
--- Corsa
 INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
 ('Ultraboost Light', 'ADIDAS', 'Corsa', 'UOMO', 43.0, 180.00, 10, 'Energia epica, ora più leggera.', '/images/scarpa2.png'),
 ('Adizero Boston 12', 'ADIDAS', 'Corsa', 'UOMO', 42.5, 150.00, 8, 'Per il giorno della gara e l\'allenamento.', '/images/scarpa2.png'),
 ('Supernova Rise', 'ADIDAS', 'Corsa', 'DONNA', 38.0, 140.00, 15, 'Comfort quotidiano affidabile.', '/images/scarpa2.png'),
-('Adizero SL', 'ADIDAS', 'Corsa', 'DONNA', 39.0, 120.00, 12, 'Velocità per tutti.', '/images/scarpa2.png');
-
--- Basket
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Adizero SL', 'ADIDAS', 'Corsa', 'DONNA', 39.0, 120.00, 12, 'Velocità per tutti.', '/images/scarpa2.png'),
 ('Harden Vol. 7', 'ADIDAS', 'Basket', 'UOMO', 44.5, 160.00, 7, 'Stile unico e prestazioni MVP.', '/images/scarpa2.png'),
 ('Dame 8 EXTPLY', 'ADIDAS', 'Basket', 'UOMO', 43.0, 130.00, 9, 'Per i momenti decisivi.', '/images/scarpa2.png'),
-('Exhibit Select', 'ADIDAS', 'Basket', 'DONNA', 40.0, 110.00, 8, 'Progettata specificamente per il piede femminile.', '/images/scarpa2.png');
-
--- Calcio
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Exhibit Select', 'ADIDAS', 'Basket', 'DONNA', 40.0, 110.00, 8, 'Progettata specificamente per il piede femminile.', '/images/scarpa2.png'),
 ('Predator Elite', 'ADIDAS', 'Calcio', 'UOMO', 43.5, 249.99, 4, 'Controllo e potenza di tiro.', '/images/scarpa 3.png'),
 ('X Crazyfast.1', 'ADIDAS', 'Calcio', 'UOMO', 42.0, 219.99, 6, 'Leggerezza per la massima velocità.', '/images/scarpa 3.png'),
 ('Copa Pure.1', 'ADIDAS', 'Calcio', 'DONNA', 38.5, 229.99, 5, 'Tocco puro e comfort.', '/images/scarpa 3.png');
 
-
 -- ----------------- PUMA -----------------
--- Corsa
 INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
 ('Deviate Nitro 2', 'PUMA', 'Corsa', 'UOMO', 43.0, 159.99, 10, 'Piastra in carbonio per la massima propulsione.', '/images/scarpa 1.png'),
 ('Magnify Nitro 2', 'PUMA', 'Corsa', 'UOMO', 42.0, 139.99, 8, 'Massima ammortizzazione NITRO.', '/images/scarpa 1.png'),
 ('Run XX Nitro', 'PUMA', 'Corsa', 'DONNA', 38.0, 129.99, 12, 'Progettata per la biomeccanica femminile.', '/images/scarpa 1.png'),
-('Velocity Nitro 2', 'PUMA', 'Corsa', 'DONNA', 39.0, 119.99, 15, 'Ammortizzazione reattiva e versatile.', '/images/scarpa 1.png');
-
--- Basket
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Velocity Nitro 2', 'PUMA', 'Corsa', 'DONNA', 39.0, 119.99, 15, 'Ammortizzazione reattiva e versatile.', '/images/scarpa 1.png'),
 ('MB.03 LaMelo Ball', 'PUMA', 'Basket', 'UOMO', 45.0, 169.99, 3, 'Stile spaziale e performance.', '/images/scarpa2.png'),
 ('TRC Blaze Court', 'PUMA', 'Basket', 'UOMO', 43.0, 119.99, 6, 'Ispirata al running, fatta per il basket.', '/images/scarpa2.png'),
-('Stewie 2', 'PUMA', 'Basket', 'DONNA', 40.0, 139.99, 5, 'La scarpa firmata Breanna Stewart.', '/images/scarpa2.png');
-
--- Calcio
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Stewie 2', 'PUMA', 'Basket', 'DONNA', 40.0, 139.99, 5, 'La scarpa firmata Breanna Stewart.', '/images/scarpa2.png'),
 ('Future 7 Ultimate', 'PUMA', 'Calcio', 'UOMO', 42.5, 219.99, 7, 'Agilità creativa e calzata perfetta.', '/images/scarpa 3.png'),
 ('King Ultimate', 'PUMA', 'Calcio', 'UOMO', 43.0, 199.99, 9, 'Controllo classico, materiali moderni.', '/images/scarpa 3.png'),
 ('Ultra Match', 'PUMA', 'Calcio', 'DONNA', 38.0, 89.99, 10, 'Velocità accessibile, calzata femminile.', '/images/scarpa 3.png');
-
 
 -- ==========================================
 -- POPOLAMENTO DATI - RECENSIONI
