@@ -82,9 +82,9 @@
     </top>
 
     <center>
-        <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;">
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent; -fx-background: white; -fx-control-inner-background: white; -fx-padding: 0;">
             <content>
-                <VBox spacing="20.0" style="-fx-background-color: white;">
+                <VBox spacing="20.0" style="-fx-background-color: white;" VBox.vgrow="ALWAYS">
                     <padding><Insets bottom="40" left="50" right="50" top="20" /></padding>
                     <children>
                         <Button onAction="#handleIndietro" text="← Torna indietro" style="-fx-background-color: transparent; -fx-text-fill: #555; -fx-font-size: 14px; -fx-cursor: hand;" />
@@ -142,7 +142,7 @@
 
                         <Separator style="-fx-padding: 20 0;" />
 
-                        <HBox spacing="40.0" alignment="TOP_LEFT">
+                        <HBox spacing="40.0" alignment="TOP_LEFT" VBox.vgrow="ALWAYS">
                             <children>
                                 <VBox spacing="10.0" maxWidth="600.0" HBox.hgrow="ALWAYS">
                                     <Label text="Descrizione del prodotto" style="-fx-font-size: 24px; -fx-font-weight: bold;" />

@@ -34,7 +34,7 @@
                         <HBox alignment="CENTER" onMouseExited="#nascondiBarra" spacing="35.0">
                             <children>
                                 <Button fx:id="btnHome" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Home" />
-                                <Button fx:id="btnCarrello" styleClass="nav-button" text="Carrello" style="-fx-border-color: white; -fx-border-width: 0 0 2 0;" />
+                                <Button fx:id="btnCarrello" onAction="#handleVaiAlCarrello" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Carrello" />
                                 <Button fx:id="btnStato" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Stato ordine" />
                                 <Button fx:id="btnPreferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" />
                             </children>

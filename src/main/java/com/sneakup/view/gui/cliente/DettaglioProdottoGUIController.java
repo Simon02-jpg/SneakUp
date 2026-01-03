@@ -70,17 +70,42 @@ public class DettaglioProdottoGUIController {
             }
         }
 
-        // Popolamento ComboBox
-        if (comboTaglia != null && comboTaglia.getItems().isEmpty()) {
-            comboTaglia.getItems().addAll("38", "39", "40", "41", "42", "43", "44", "45", "46");
-        }
-        if (comboColore != null && comboColore.getItems().isEmpty()) {
-            comboColore.getItems().addAll("Standard", "Black/White", "Limited Edition (+20€)", "Custom Gold (+50€)");
+        // STILE ROSSO ARROTONDATO (Coerente con il Carrello)
+        String styleSelettori = "-fx-background-color: #ff0000; -fx-text-fill: white; -fx-mark-color: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-font-size: 14px; -fx-padding: 5 10;";
+
+        // Popolamento e Styling ComboBox Taglia
+        if (comboTaglia != null) {
+            if (comboTaglia.getItems().isEmpty()) {
+                comboTaglia.getItems().addAll("38", "39", "40", "41", "42", "43", "44", "45", "46");
+            }
+            comboTaglia.setStyle(styleSelettori);
+            // Forza testo bianco
+            comboTaglia.setButtonCell(new ListCell<String>() {
+                @Override protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) setText(null);
+                    else { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); }
+                }
+            });
+            comboTaglia.setOnAction(e -> aggiornaPrezzoDinamico());
         }
 
-        // Listener: Appena cambi valore, ricalcola il prezzo
-        if (comboTaglia != null) comboTaglia.setOnAction(e -> aggiornaPrezzoDinamico());
-        if (comboColore != null) comboColore.setOnAction(e -> aggiornaPrezzoDinamico());
+        // Popolamento e Styling ComboBox Colore
+        if (comboColore != null) {
+            if (comboColore.getItems().isEmpty()) {
+                comboColore.getItems().addAll("Standard", "Black/White", "Limited Edition (+20€)", "Custom Gold (+50€)");
+            }
+            comboColore.setStyle(styleSelettori);
+            // Forza testo bianco
+            comboColore.setButtonCell(new ListCell<String>() {
+                @Override protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) setText(null);
+                    else { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); }
+                }
+            });
+            comboColore.setOnAction(e -> aggiornaPrezzoDinamico());
+        }
     }
 
     public void setDettagliScarpa(Scarpa s) {
