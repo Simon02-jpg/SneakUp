@@ -31,23 +31,32 @@ public class CarrelloGUIController {
 
     @FXML private VBox boxProdotti;
     @FXML private Label lblTotale, lblTotaleFinale, lblSpedizione, lblUser;
-    @FXML private Button btnLogin;
+    @FXML private Button btnLogin, btnHome, btnCarrello, btnStato, btnPreferiti, btnCheckout, btnIndietro;
     @FXML private Region barraAnimata;
     @FXML private ScrollPane scrollPane;
 
-    // Variabili per il tasto "Indietro"
     private String prevFxml, prevBrand, prevGen, prevCat, prevRicerca;
+    // Variabile per gestire la navigazione corretta quando si torna al Dettaglio
+    private String grandParentFxml;
     private Scarpa prevScarpa;
 
     private final GestoreProdotti gestore = new GestoreProdotti();
+    private final double COSTO_SPEDIZIONE_STANDARD = 9.99; // Costo base spedizione
 
-    public void setProvenienza(String fxml, String brand, String gen, String cat, String ricerca, Scarpa s) {
+    // Metodo completo con grandParentFxml
+    public void setProvenienza(String fxml, String brand, String gen, String cat, String ricerca, Scarpa s, String grandParentFxml) {
         this.prevFxml = fxml;
         this.prevBrand = brand;
         this.prevGen = gen;
         this.prevCat = cat;
         this.prevRicerca = ricerca;
         this.prevScarpa = s;
+        this.grandParentFxml = grandParentFxml;
+    }
+
+    // Overloading per compatibilità
+    public void setProvenienza(String fxml, String brand, String gen, String cat, String ricerca, Scarpa s) {
+        setProvenienza(fxml, brand, gen, cat, ricerca, s, null);
     }
 
     @FXML
@@ -80,21 +89,46 @@ public class CarrelloGUIController {
             for (Scarpa s : carrello) {
                 boxProdotti.getChildren().add(creaCardCarrelloModificabile(s));
             }
-            lblSpedizione.setText("Gratuita");
+            // Calcola totali e spedizione in base alle regole
             ricalcolaTotali();
         }
     }
 
+    // --- LOGICA SPEDIZIONE AGGIORNATA ---
     private void ricalcolaTotali() {
-        double totale = 0.0;
+        double totaleProdotti = 0.0;
         for (Scarpa s : Sessione.getInstance().getCarrello()) {
-            totale += s.getPrezzo();
+            totaleProdotti += s.getPrezzo();
         }
-        if (lblTotale != null) lblTotale.setText(String.format("€%.2f", totale));
-        if (lblTotaleFinale != null) lblTotaleFinale.setText(String.format("€%.2f", totale));
+
+        // 1. Partiamo dal presupposto che si paga la spedizione standard
+        double costoSpedizione = COSTO_SPEDIZIONE_STANDARD;
+
+        // 2. La spedizione diventa GRATIS solo se:
+        //    - L'utente è LOGGATO
+        //    - E il totale prodotti supera i 100€
+        if (Sessione.getInstance().isLoggato() && totaleProdotti > 100.00) {
+            costoSpedizione = 0.0;
+        }
+
+        double totaleFinale = totaleProdotti + costoSpedizione;
+
+        // Aggiornamento Interfaccia
+        if (lblTotale != null) lblTotale.setText(String.format("€%.2f", totaleProdotti));
+
+        if (lblSpedizione != null) {
+            if (costoSpedizione == 0.0) {
+                lblSpedizione.setText("Gratuita");
+                lblSpedizione.setStyle("-fx-text-fill: green; -fx-font-weight: bold; -fx-font-size: 16px;");
+            } else {
+                lblSpedizione.setText(String.format("€%.2f", costoSpedizione));
+                lblSpedizione.setStyle("-fx-text-fill: #333333; -fx-font-weight: bold; -fx-font-size: 16px;");
+            }
+        }
+
+        if (lblTotaleFinale != null) lblTotaleFinale.setText(String.format("€%.2f", totaleFinale));
     }
 
-    // --- CARD MODIFICABILE AGGIORNATA ---
     private HBox creaCardCarrelloModificabile(Scarpa s) {
         HBox card = new HBox(20);
         card.setPadding(new Insets(15));
@@ -107,10 +141,7 @@ public class CarrelloGUIController {
             String path = (s.getUrlImmagine() != null) ? s.getUrlImmagine() : "/images/scarpa 1.png";
             img.setImage(new Image(getClass().getResource(path).toExternalForm()));
         } catch (Exception e) {}
-
-        img.setFitHeight(150);
-        img.setFitWidth(150);
-        img.setPreserveRatio(true);
+        img.setFitHeight(150); img.setFitWidth(150); img.setPreserveRatio(true);
 
         // 2. Info e Controlli
         VBox info = new VBox(10);
@@ -120,48 +151,31 @@ public class CarrelloGUIController {
         Label nome = new Label(nomePulito);
         nome.setFont(Font.font("System", FontWeight.BOLD, 20));
 
-        String styleSelettori = "-fx-background-color: #ff0000; -fx-text-fill: white; -fx-mark-color: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-font-size: 14px; -fx-padding: 5 10;";
+        String styleSelettori = "-fx-background-color: #ff0000; -fx-text-fill: white; -fx-mark-color: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-font-size: 14px; -fx-padding: 5 10; -fx-cursor: hand;";
 
         // Taglia
-        HBox rigaTaglia = new HBox(10);
-        rigaTaglia.setAlignment(Pos.CENTER_LEFT);
-        Label lblTaglia = new Label("Taglia:");
-        lblTaglia.setStyle("-fx-font-size: 14px;");
-
+        HBox rigaTaglia = new HBox(10); rigaTaglia.setAlignment(Pos.CENTER_LEFT);
+        Label lblTaglia = new Label("Taglia:"); lblTaglia.setStyle("-fx-font-size: 14px;");
         ComboBox<String> comboTaglia = new ComboBox<>();
         comboTaglia.getItems().addAll("38", "39", "40", "41", "42", "43", "44", "45", "46");
         comboTaglia.setValue(String.valueOf((int)s.getTaglia()));
         comboTaglia.setStyle(styleSelettori + "-fx-pref-width: 90px;");
-        comboTaglia.setButtonCell(new ListCell<String>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) setText(null);
-                else { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); }
-            }
-        });
+        comboTaglia.setButtonCell(new ListCell<String>() { @Override protected void updateItem(String item, boolean empty) { super.updateItem(item, empty); if (!empty && item!=null) { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); } else setText(null); }});
+        configuraAnimazioneNodo(comboTaglia);
         rigaTaglia.getChildren().addAll(lblTaglia, comboTaglia);
 
         // Colore
-        HBox rigaColore = new HBox(10);
-        rigaColore.setAlignment(Pos.CENTER_LEFT);
-        Label lblColore = new Label("Colore:");
-        lblColore.setStyle("-fx-font-size: 14px;");
-
+        HBox rigaColore = new HBox(10); rigaColore.setAlignment(Pos.CENTER_LEFT);
+        Label lblColore = new Label("Colore:"); lblColore.setStyle("-fx-font-size: 14px;");
         ComboBox<String> comboColore = new ComboBox<>();
         comboColore.getItems().addAll("Standard", "Black/White", "Limited Edition (+20€)", "Custom Gold (+50€)");
-        String coloreAttuale = "Standard";
-        if (s.getModello().contains("Limited")) coloreAttuale = "Limited Edition (+20€)";
-        else if (s.getModello().contains("Gold")) coloreAttuale = "Custom Gold (+50€)";
-        else if (s.getModello().contains("Black")) coloreAttuale = "Black/White";
-        comboColore.setValue(coloreAttuale);
+        comboColore.setValue("Standard");
+        if (s.getModello().contains("Limited")) comboColore.setValue("Limited Edition (+20€)");
+        else if (s.getModello().contains("Gold")) comboColore.setValue("Custom Gold (+50€)");
+        else if (s.getModello().contains("Black")) comboColore.setValue("Black/White");
         comboColore.setStyle(styleSelettori + "-fx-pref-width: 200px;");
-        comboColore.setButtonCell(new ListCell<String>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) setText(null);
-                else { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); }
-            }
-        });
+        comboColore.setButtonCell(new ListCell<String>() { @Override protected void updateItem(String item, boolean empty) { super.updateItem(item, empty); if (!empty && item!=null) { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); } else setText(null); }});
+        configuraAnimazioneNodo(comboColore);
         rigaColore.getChildren().addAll(lblColore, comboColore);
 
         // Stelle
@@ -177,38 +191,32 @@ public class CarrelloGUIController {
         HBox.setHgrow(info, Priority.ALWAYS);
 
         // 3. Prezzo e Rimuovi
-        VBox prezziBox = new VBox(15);
-        prezziBox.setAlignment(Pos.CENTER_RIGHT);
-
+        VBox prezziBox = new VBox(15); prezziBox.setAlignment(Pos.CENTER_RIGHT);
         Label lblPrezzoSingolo = new Label(String.format("€%.2f", s.getPrezzo()));
         lblPrezzoSingolo.setFont(Font.font("System", FontWeight.BOLD, 26));
         lblPrezzoSingolo.setStyle("-fx-text-fill: #333333;");
 
         Button btnRimuovi = new Button("RIMUOVI");
         btnRimuovi.setStyle("-fx-background-color: #ffebee; -fx-text-fill: #d32f2f; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 8; -fx-padding: 10 20;");
-        btnRimuovi.setOnAction(e -> {
-            Sessione.getInstance().rimuoviDalCarrello(s);
-            aggiornaCarrello();
-        });
-        btnRimuovi.setOnMouseEntered(e -> zoom(btnRimuovi, 1.1));
-        btnRimuovi.setOnMouseExited(e -> zoom(btnRimuovi, 1.0));
+        btnRimuovi.setOnAction(e -> { Sessione.getInstance().rimuoviDalCarrello(s); aggiornaCarrello(); });
+        configuraAnimazioneNodo(btnRimuovi);
 
         prezziBox.getChildren().addAll(lblPrezzoSingolo, btnRimuovi);
 
-        // Logica aggiornamento dinamico
+        // Aggiornamento dinamico
         Scarpa scarpaDB = gestore.recuperaScarpaPerId(s.getId());
         Runnable aggiornaPrezzo = () -> {
             int t = (int) s.getTaglia();
             try { t = Integer.parseInt(comboTaglia.getValue()); s.setTaglia(t); } catch (Exception ex) {}
             String c = comboColore.getValue();
             double nuovoPrezzo = gestore.calcolaPrezzoDinamico(scarpaDB, t, c);
-            if (c != null && !c.equals("Standard")) s.setModello(nomePulito + " (" + c + ")");
-            else s.setModello(nomePulito);
+            if (c != null && !c.equals("Standard")) s.setModello(nomePulito + " (" + c + ")"); else s.setModello(nomePulito);
             s.setPrezzo(nuovoPrezzo);
             lblPrezzoSingolo.setText(String.format("€%.2f", s.getPrezzo()));
+
+            // IMPORTANTE: Ricalcola i totali (e la spedizione) se il prezzo cambia
             ricalcolaTotali();
         };
-
         comboTaglia.setOnAction(e -> aggiornaPrezzo.run());
         comboColore.setOnAction(e -> aggiornaPrezzo.run());
 
@@ -216,20 +224,23 @@ public class CarrelloGUIController {
         return card;
     }
 
-    // --- NAVIGAZIONE ---
+    private void configuraAnimazioneNodo(Node node) {
+        node.setOnMouseEntered(e -> zoom(node, 1.05));
+        node.setOnMouseExited(e -> zoom(node, 1.0));
+    }
 
+    // --- NAVIGAZIONE ---
     @FXML private void handleProcediCheckout(ActionEvent event) {
         if (Sessione.getInstance().getCarrello().isEmpty()) {
             new Alert(Alert.AlertType.WARNING, "Il carrello è vuoto!").showAndWait();
             return;
         }
-        if (!Sessione.getInstance().isLoggato()) {
-            new Alert(Alert.AlertType.WARNING, "Devi effettuare il login per completare l'acquisto.").showAndWait();
-            return;
-        }
-        new Alert(Alert.AlertType.INFORMATION, "Ordine inviato con successo! Grazie per l'acquisto.").showAndWait();
-        Sessione.getInstance().svuotaCarrello();
-        aggiornaCarrello();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Pagamento.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) { e.printStackTrace(); new Alert(Alert.AlertType.ERROR, "Errore caricamento pagamento.").showAndWait(); }
     }
 
     @FXML private void handleIndietro(ActionEvent event) {
@@ -239,14 +250,19 @@ public class CarrelloGUIController {
             Parent root = loader.load();
             Object controller = loader.getController();
 
-            // Ripristina lo stato del controller precedente
             if (controller instanceof ListaProdottiGUIController) {
                 ((ListaProdottiGUIController) controller).setFiltri(prevBrand, prevCat, prevGen);
             } else if (controller instanceof DettaglioProdottoGUIController) {
-                ((DettaglioProdottoGUIController) controller).setDettagliScarpa(prevScarpa);
-                ((DettaglioProdottoGUIController) controller).setStatoPrecedente(prevBrand, prevCat, prevGen, prevRicerca);
+                DettaglioProdottoGUIController dp = (DettaglioProdottoGUIController) controller;
+                dp.setDettagliScarpa(prevScarpa);
+                if (grandParentFxml != null) {
+                    dp.setProvenienza(grandParentFxml);
+                }
+                dp.setStatoPrecedente(prevBrand, prevCat, prevGen, prevRicerca);
             } else if (controller instanceof SelezioneCategoriaGUIController) {
                 ((SelezioneCategoriaGUIController) controller).setDati(prevGen, prevBrand);
+            } else if (controller instanceof PreferitiGUIController) {
+                ((PreferitiGUIController) controller).setProvenienza(grandParentFxml != null ? grandParentFxml : "/com/sneakup/view/Benvenuto.fxml");
             }
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -256,26 +272,7 @@ public class CarrelloGUIController {
         }
     }
 
-    // CORREZIONE QUI: Metodo handleVaiAlCarrello corretto
-    @FXML private void handleVaiAlCarrello(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
-            Parent root = loader.load();
-
-            CarrelloGUIController ctrl = loader.getController();
-            // Ricarichiamo mantenendo la stessa provenienza di prima
-            ctrl.setProvenienza(prevFxml, prevBrand, prevGen, prevCat, prevRicerca, prevScarpa);
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    // Alias nel caso l'FXML usi "handleCarrello" invece di "handleVaiAlCarrello"
-    @FXML private void handleCarrello(ActionEvent event) {
-        handleVaiAlCarrello(event);
-    }
-
+    @FXML private void handleVaiAlCarrello(ActionEvent event) { aggiornaCarrello(); }
     @FXML private void handleLoginGenerico(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));

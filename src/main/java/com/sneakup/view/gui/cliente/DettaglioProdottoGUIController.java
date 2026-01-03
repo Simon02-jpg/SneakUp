@@ -41,7 +41,7 @@ public class DettaglioProdottoGUIController {
     @FXML private Label lblNumeroVoti;
     @FXML private VBox containerRecensioni;
 
-    // Riferimenti ai bottoni per applicare le animazioni via codice se non settati da FXML
+    // Riferimenti ai bottoni per animazioni
     @FXML private Button btnAcquista, btnAggiungiCarrello, btnIndietro;
 
     private Scarpa scarpaBase;
@@ -91,7 +91,6 @@ public class DettaglioProdottoGUIController {
         }
 
         // --- APPLICAZIONE ANIMAZIONI AI BOTTONI ---
-        // Se hai dato dei fx:id ai bottoni nel file FXML, questo li rende interattivi automaticamente
         configuraAnimazioneBottone(btnAcquista);
         configuraAnimazioneBottone(btnAggiungiCarrello);
         configuraAnimazioneBottone(btnIndietro);
@@ -114,9 +113,7 @@ public class DettaglioProdottoGUIController {
         if (imgScarpa != null && s.getUrlImmagine() != null) {
             try {
                 imgScarpa.setImage(new Image(getClass().getResource(s.getUrlImmagine()).toExternalForm()));
-            } catch (Exception e) {
-                System.err.println("Errore caricamento immagine: " + s.getUrlImmagine());
-            }
+            } catch (Exception e) {}
         }
 
         if (comboTaglia != null) {
@@ -167,41 +164,73 @@ public class DettaglioProdottoGUIController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
+    // --- AGGIUNGI AL CARRELLO (Aggiunge e rimane qui) ---
     @FXML
     private void handleAggiungiAlCarrello(ActionEvent event) {
-        if (scarpaBase != null) {
-            Scarpa scarpaDaComprare = new Scarpa();
-            scarpaDaComprare.setId(scarpaBase.getId());
-            scarpaDaComprare.setMarca(scarpaBase.getMarca());
-            scarpaDaComprare.setCategoria(scarpaBase.getCategoria());
-            scarpaDaComprare.setGenere(scarpaBase.getGenere());
-            scarpaDaComprare.setUrlImmagine(scarpaBase.getUrlImmagine());
-            scarpaDaComprare.setDescrizione(scarpaBase.getDescrizione());
-            scarpaDaComprare.setPrezzo(this.prezzoFinaleCalcolato);
-
-            try {
-                scarpaDaComprare.setTaglia(Double.parseDouble(comboTaglia.getValue()));
-            } catch (Exception e) {
-                scarpaDaComprare.setTaglia(scarpaBase.getTaglia());
-            }
-
-            String coloreScelto = comboColore.getValue();
-            if (coloreScelto != null && !coloreScelto.equals("Standard"))
-                scarpaDaComprare.setModello(scarpaBase.getModello() + " (" + coloreScelto + ")");
-            else
-                scarpaDaComprare.setModello(scarpaBase.getModello());
-
+        Scarpa scarpaDaComprare = costruisciScarpaDaUI();
+        if (scarpaDaComprare != null) {
             Sessione.getInstance().aggiungiAlCarrello(scarpaDaComprare);
             new Alert(Alert.AlertType.INFORMATION, "Aggiunto al carrello!").showAndWait();
         }
     }
 
+    // --- ACQUISTA ORA (Va al Pagamento SENZA aggiungere al carrello) ---
     @FXML
     private void handleAcquista(ActionEvent event) {
-        handleAggiungiAlCarrello(event);
-        handleVaiAlCarrello(event);
+        Scarpa scarpaDaComprare = costruisciScarpaDaUI();
+        if (scarpaDaComprare != null) {
+            // NOTA: NON aggiungiamo al carrello sessione qui.
+
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Pagamento.fxml"));
+                Parent root = loader.load();
+
+                // Passiamo i dati al controller del pagamento
+                PagamentoGUIController pagCtrl = loader.getController();
+                pagCtrl.setDatiNavigazione(
+                        "/com/sneakup/view/DettaglioProdotto.fxml",  // Provenienza
+                        scarpaBase,                                  // Dati per ricaricare questa pagina se si torna indietro
+                        scarpaDaComprare,                            // Prodotto singolo da pagare
+                        prevBrand, prevGenere, prevCategoria, prevRicerca // Filtri storici
+                );
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
+            } catch (IOException e) {
+                e.printStackTrace();
+                new Alert(Alert.AlertType.ERROR, "Errore nel caricamento della pagina di pagamento.").showAndWait();
+            }
+        }
     }
 
+    private Scarpa costruisciScarpaDaUI() {
+        if (scarpaBase == null) return null;
+
+        Scarpa s = new Scarpa();
+        s.setId(scarpaBase.getId());
+        s.setMarca(scarpaBase.getMarca());
+        s.setCategoria(scarpaBase.getCategoria());
+        s.setGenere(scarpaBase.getGenere());
+        s.setUrlImmagine(scarpaBase.getUrlImmagine());
+        s.setDescrizione(scarpaBase.getDescrizione());
+        s.setPrezzo(this.prezzoFinaleCalcolato);
+
+        try {
+            s.setTaglia(Double.parseDouble(comboTaglia.getValue()));
+        } catch (Exception e) {
+            s.setTaglia(scarpaBase.getTaglia());
+        }
+
+        String coloreScelto = comboColore.getValue();
+        if (coloreScelto != null && !coloreScelto.equals("Standard"))
+            s.setModello(scarpaBase.getModello() + " (" + coloreScelto + ")");
+        else
+            s.setModello(scarpaBase.getModello());
+
+        return s;
+    }
+
+    // --- ALTRI METODI DI VISUALIZZAZIONE ---
     private void caricaRecensioni() {
         if (containerRecensioni == null) return;
         containerRecensioni.getChildren().clear();
@@ -246,7 +275,8 @@ public class DettaglioProdottoGUIController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
             Parent root = loader.load();
             CarrelloGUIController ctrl = loader.getController();
-            ctrl.setProvenienza("/com/sneakup/view/DettaglioProdotto.fxml", prevBrand, prevGenere, prevCategoria, prevRicerca, scarpaBase);
+            // Quando vado al carrello dal dettaglio, gli dico che vengo da qui, così posso tornare
+            ctrl.setProvenienza("/com/sneakup/view/DettaglioProdotto.fxml", prevBrand, prevGenere, prevCategoria, prevRicerca, scarpaBase, fxmlProvenienza);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
         } catch (IOException e) { e.printStackTrace(); }
@@ -273,26 +303,10 @@ public class DettaglioProdottoGUIController {
     @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata!=null) barraAnimata.setOpacity(0.0); }
     @FXML public void sottolineaUser(MouseEvent e) { if (lblUser != null) lblUser.setUnderline(true); }
     @FXML public void ripristinaUser(MouseEvent e) { if (lblUser != null) lblUser.setUnderline(false); }
-
     @FXML public void iconaEntra(MouseEvent e) { zoom((Node) e.getSource(), 1.1); }
     @FXML public void iconaEsce(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
-
-    private void zoom(Node n, double s) {
-        if (n == null) return;
-        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
-        st.setToX(s);
-        st.setToY(s);
-        st.play();
-    }
-
-    private void navigaSemplice(String fxml, java.util.EventObject e) {
-        try {
-            Parent root = FXMLLoader.load(getClass().getResource(fxml));
-            Stage s = (Stage)((Node)e.getSource()).getScene().getWindow();
-            s.setScene(new Scene(root));
-        } catch(Exception ex) { ex.printStackTrace(); }
-    }
-
+    private void zoom(Node n, double s) { ScaleTransition st = new ScaleTransition(Duration.millis(200), n); st.setToX(s); st.setToY(s); st.play(); }
+    private void navigaSemplice(String fxml, java.util.EventObject e) { try { Parent root = FXMLLoader.load(getClass().getResource(fxml)); Stage s = (Stage)((Node)e.getSource()).getScene().getWindow(); s.setScene(new Scene(root)); } catch(Exception ex) { ex.printStackTrace(); } }
     @FXML private void handleReloadHome(ActionEvent event) { navigaSemplice("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaSemplice("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleLoginGenerico(ActionEvent event) { navigaSemplice("/com/sneakup/view/Login.fxml", event); }
