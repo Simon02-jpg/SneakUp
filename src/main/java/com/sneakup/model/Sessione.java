@@ -3,6 +3,8 @@ package com.sneakup.model;
 import com.sneakup.model.dao.db.PreferitiDAOJDBC;
 import com.sneakup.model.dao.db.CarrelloDAOJDBC;
 import com.sneakup.model.domain.Scarpa;
+import com.sneakup.model.domain.Utente; // Importante
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +15,9 @@ public class Sessione {
     private String username;
     private String ruolo;
     private boolean loggato;
+
+    // NUOVO: Oggetto Utente completo (per avere email, indirizzo, ecc. nell'area personale)
+    private Utente utenteCorrente;
 
     private List<Scarpa> listaPreferiti;
     private List<Scarpa> carrello;
@@ -44,13 +49,12 @@ public class Sessione {
         this.ruolo = ruolo;
         this.loggato = true;
 
-        // 1. Carica dati dal DB
+        // 1. Carica dati dal DB (Preferiti e Carrello salvati in precedenza)
         this.listaPreferiti = preferitiDAO.caricaPreferiti(username);
         this.carrello = carrelloDAO.caricaCarrello(username);
 
         // 2. Unisce il carrello dell'ospite con quello dell'utente nel DB
         for (Scarpa s : carrelloOspite) {
-            // Se vogliamo permettere duplicati (es. due paia dello stesso modello), aggiungiamo sempre
             this.carrello.add(s);
             carrelloDAO.salva(this.username, s.getId());
         }
@@ -61,12 +65,27 @@ public class Sessione {
     public void logout() {
         this.username = null;
         this.ruolo = null;
+        this.utenteCorrente = null; // Pulisce l'utente completo
         this.loggato = false;
         this.listaPreferiti.clear();
         this.carrello.clear();
     }
 
-    // --- GETTERS ---
+    // --- GETTERS & SETTERS (Utente Completo) ---
+
+    public void setUtente(Utente u) {
+        this.utenteCorrente = u;
+        // Aggiorna anche il campo username per coerenza, se necessario
+        if (u != null) {
+            this.username = u.getUsername();
+        }
+    }
+
+    public Utente getUtente() {
+        return utenteCorrente;
+    }
+
+    // --- GETTERS STANDARD ---
     public boolean isLoggato() { return loggato; }
     public String getUsername() { return username; }
     public String getRuolo() { return ruolo; }

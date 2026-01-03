@@ -1,7 +1,7 @@
 package com.sneakup.view.gui.cliente;
 
+import com.sneakup.controller.GestoreProdotti; // IMPORT NUOVO: Usiamo il Controller Applicativo
 import com.sneakup.model.Sessione;
-import com.sneakup.model.dao.db.ScarpaDAOJDBC;
 import com.sneakup.model.domain.Recensione;
 import com.sneakup.model.domain.Scarpa;
 import javafx.animation.ScaleTransition;
@@ -46,7 +46,9 @@ public class DettaglioProdottoGUIController {
     private double prezzoFinaleCalcolato; // Il prezzo che cambia dinamicamente
 
     private String prevBrand, prevCategoria, prevGenere, prevRicerca;
-    private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
+
+    // MODIFICA BCE: Sostituito DAO con Gestore
+    private final GestoreProdotti gestore = new GestoreProdotti();
 
     public void setStatoPrecedente(String brand, String cat, String gen, String ricerca) {
         this.prevBrand = brand;
@@ -99,14 +101,13 @@ public class DettaglioProdottoGUIController {
             } catch (Exception e) {}
         }
 
-        // Seleziona i valori di default (così l'utente vede subito cosa sta comprando)
+        // Seleziona i valori di default
         if (comboTaglia != null) {
-            // Cerchiamo di selezionare la taglia che arriva dal DB, se presente nella lista
             String tagliaDb = String.valueOf((int)s.getTaglia());
             if (comboTaglia.getItems().contains(tagliaDb)) {
                 comboTaglia.setValue(tagliaDb);
             } else {
-                comboTaglia.getSelectionModel().select(0); // Altrimenti seleziona la prima
+                comboTaglia.getSelectionModel().select(0);
             }
         }
 
@@ -118,50 +119,38 @@ public class DettaglioProdottoGUIController {
     }
 
     /**
-     * Logica che collega la scelta dell'utente al prezzo visualizzato
+     * MODIFICA BCE: Deleghiamo il calcolo del prezzo al GestoreProdotti
      */
     private void aggiornaPrezzoDinamico() {
         if (scarpaBase == null) return;
 
-        double prezzo = scarpaBase.getPrezzo();
-        double sovrapprezzo = 0.0;
+        // Recupero input dalla vista
+        int taglia = 38; // Default
+        try {
+            if (comboTaglia.getValue() != null)
+                taglia = Integer.parseInt(comboTaglia.getValue());
+        } catch (Exception e) {}
 
-        // 1. Controllo Taglia
-        String tagliaStr = comboTaglia.getValue();
-        if (tagliaStr != null) {
-            try {
-                int t = Integer.parseInt(tagliaStr);
-                if (t >= 45) sovrapprezzo += 10.0; // Taglie grandi costano di più
-            } catch (Exception e) {}
-        }
+        String colore = comboColore.getValue();
 
-        // 2. Controllo Colore
-        String coloreStr = comboColore.getValue();
-        if (coloreStr != null) {
-            if (coloreStr.contains("Limited")) sovrapprezzo += 20.0;
-            else if (coloreStr.contains("Gold")) sovrapprezzo += 50.0;
-        }
+        // CHIAMATA AL GESTORE (Business Logic separata)
+        this.prezzoFinaleCalcolato = gestore.calcolaPrezzoDinamico(scarpaBase, taglia, colore);
 
-        this.prezzoFinaleCalcolato = prezzo + sovrapprezzo;
-
-        // Aggiorna la Label a video
+        // Aggiorna UI
         if (lblPrezzo != null) lblPrezzo.setText(String.format("€%.2f", this.prezzoFinaleCalcolato));
 
-        // Aggiorna info extra
+        // Calcolo sovrapprezzo solo per visualizzazione
+        double sovrapprezzo = this.prezzoFinaleCalcolato - scarpaBase.getPrezzo();
         if (lblInfoExtra != null) {
-            if (sovrapprezzo > 0) lblInfoExtra.setText("(Sovrapprezzo variante: +€" + sovrapprezzo + ")");
+            if (sovrapprezzo > 0) lblInfoExtra.setText(String.format("(Sovrapprezzo variante: +€%.2f)", sovrapprezzo));
             else lblInfoExtra.setText("");
         }
     }
 
-    /**
-     * QUI AVVIENE IL COLLEGAMENTO VERO:
-     * Creiamo una NUOVA scarpa con i dati scelti nelle ComboBox
-     */
     @FXML
     private void handleAggiungiAlCarrello(ActionEvent event) {
         if (scarpaBase != null) {
-            // 1. CLONIAMO L'OGGETTO (Così non modifichiamo quello originale della lista)
+            // 1. CLONIAMO L'OGGETTO
             Scarpa scarpaDaComprare = new Scarpa();
             scarpaDaComprare.setId(scarpaBase.getId());
             scarpaDaComprare.setMarca(scarpaBase.getMarca());
@@ -170,20 +159,16 @@ public class DettaglioProdottoGUIController {
             scarpaDaComprare.setUrlImmagine(scarpaBase.getUrlImmagine());
             scarpaDaComprare.setDescrizione(scarpaBase.getDescrizione());
 
-            // 2. APPLICHIAMO LE SCELTE DELL'UTENTE (Qui avviene il collegamento!)
-
-            // Setta il PREZZO CALCOLATO (quello che vede a schermo)
+            // 2. APPLICHIAMO LE SCELTE DELL'UTENTE
             scarpaDaComprare.setPrezzo(this.prezzoFinaleCalcolato);
 
-            // Setta la TAGLIA SCELTA dalla tendina
             try {
                 double tagliaScelta = Double.parseDouble(comboTaglia.getValue());
                 scarpaDaComprare.setTaglia(tagliaScelta);
             } catch (Exception e) {
-                scarpaDaComprare.setTaglia(scarpaBase.getTaglia()); // Fallback
+                scarpaDaComprare.setTaglia(scarpaBase.getTaglia());
             }
 
-            // Setta il COLORE SCELTO (Modifichiamo il nome modello per distinguerlo nel carrello)
             String coloreScelto = comboColore.getValue();
             if (coloreScelto != null && !coloreScelto.equals("Standard")) {
                 scarpaDaComprare.setModello(scarpaBase.getModello() + " (" + coloreScelto + ")");
@@ -191,7 +176,7 @@ public class DettaglioProdottoGUIController {
                 scarpaDaComprare.setModello(scarpaBase.getModello());
             }
 
-            // 3. AGGIUNGIAMO AL CARRELLO L'OGGETTO MODIFICATO
+            // 3. AGGIUNGIAMO AL CARRELLO
             Sessione.getInstance().aggiungiAlCarrello(scarpaDaComprare);
 
             new Alert(Alert.AlertType.INFORMATION,
@@ -205,16 +190,17 @@ public class DettaglioProdottoGUIController {
 
     @FXML
     private void handleAcquista(ActionEvent event) {
-        // Simula acquisto diretto aggiungendo e andando al carrello
         handleAggiungiAlCarrello(event);
         handleVaiAlCarrello(event);
     }
 
-    // --- GESTIONE RECENSIONI ---
+    // --- GESTIONE RECENSIONI (MODIFICA BCE: Usa il Gestore) ---
     private void caricaRecensioni() {
         if (containerRecensioni == null) return;
         containerRecensioni.getChildren().clear();
-        List<Recensione> recensioni = scarpaDAO.getRecensioniPerScarpa(scarpaBase.getId());
+
+        // CHIAMATA AL GESTORE INVECE CHE AL DAO
+        List<Recensione> recensioni = gestore.getRecensioni(scarpaBase.getId());
 
         if (recensioni.isEmpty()) {
             Label noRec = new Label("Nessuna recensione per questo prodotto.");
@@ -252,10 +238,13 @@ public class DettaglioProdottoGUIController {
         }
     }
 
-    // --- GRAFICA STELLE MEDIA ---
+    // --- GRAFICA STELLE MEDIA (MODIFICA BCE: Usa il Gestore) ---
     private void aggiornaGraficaStelle() {
         if (containerStelle == null) return;
-        double media = scarpaDAO.getMediaVoti(scarpaBase.getId());
+
+        // CHIAMATA AL GESTORE
+        double media = gestore.getMediaVoti(scarpaBase.getId());
+
         containerStelle.getChildren().clear();
         for (int i = 1; i <= 5; i++) {
             Label stella = new Label("★");
@@ -283,7 +272,6 @@ public class DettaglioProdottoGUIController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
             Parent root = loader.load();
             CarrelloGUIController ctrl = loader.getController();
-            // Passiamo la scarpa BASE per poter tornare indietro correttamente
             ctrl.setProvenienza("/com/sneakup/view/DettaglioProdotto.fxml", prevBrand, prevGenere, prevCategoria, prevRicerca, scarpaBase);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));

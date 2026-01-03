@@ -1,7 +1,7 @@
 package com.sneakup.view.gui.cliente;
 
+import com.sneakup.controller.GestoreProdotti; // IMPORT NUOVO: Usiamo il Controller Applicativo
 import com.sneakup.model.Sessione;
-import com.sneakup.model.dao.db.ScarpaDAOJDBC;
 import com.sneakup.model.domain.Scarpa;
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
@@ -38,7 +38,8 @@ public class CarrelloGUIController {
     private String prevFxml, prevBrand, prevGen, prevCat, prevRicerca;
     private Scarpa prevScarpa;
 
-    private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
+    // MODIFICA BCE: Sostituito DAO con Gestore
+    private final GestoreProdotti gestore = new GestoreProdotti();
 
     public void setProvenienza(String fxml, String brand, String gen, String cat, String ricerca, Scarpa s) {
         this.prevFxml = fxml;
@@ -80,7 +81,7 @@ public class CarrelloGUIController {
                 boxProdotti.getChildren().add(creaCardCarrelloModificabile(s));
             }
             lblSpedizione.setText("Gratuita");
-            ricalcolaTotali(); // Calcola la somma finale
+            ricalcolaTotali();
         }
     }
 
@@ -93,7 +94,7 @@ public class CarrelloGUIController {
         if (lblTotaleFinale != null) lblTotaleFinale.setText(String.format("€%.2f", totale));
     }
 
-    // --- CARD MODIFICABILE (Nuova versione) ---
+    // --- CARD MODIFICABILE (Versione con Gestore) ---
     private HBox creaCardCarrelloModificabile(Scarpa s) {
         HBox card = new HBox(15);
         card.setPadding(new Insets(10));
@@ -122,7 +123,7 @@ public class CarrelloGUIController {
         Label lblTaglia = new Label("Taglia:");
         ComboBox<String> comboTaglia = new ComboBox<>();
         comboTaglia.getItems().addAll("38", "39", "40", "41", "42", "43", "44", "45", "46");
-        comboTaglia.setValue(String.valueOf((int)s.getTaglia())); // Seleziona taglia attuale
+        comboTaglia.setValue(String.valueOf((int)s.getTaglia()));
         comboTaglia.setStyle("-fx-font-size: 12px; -fx-pref-width: 70px;");
         rigaTaglia.getChildren().addAll(lblTaglia, comboTaglia);
 
@@ -143,8 +144,8 @@ public class CarrelloGUIController {
         comboColore.setStyle("-fx-font-size: 12px; -fx-pref-width: 150px;");
         rigaColore.getChildren().addAll(lblColore, comboColore);
 
-        // STELLE
-        double mediaVoti = scarpaDAO.getMediaVoti(s.getId());
+        // STELLE (Usa il Gestore)
+        double mediaVoti = gestore.getMediaVoti(s.getId());
         HBox stelleBox = new HBox(1);
         for(int i=1; i<=5; i++) {
             Label star = new Label("★");
@@ -171,29 +172,24 @@ public class CarrelloGUIController {
 
         prezziBox.getChildren().addAll(lblPrezzoSingolo, btnRimuovi);
 
-        // --- LOGICA DI AGGIORNAMENTO DINAMICO ---
-        // Quando cambio taglia o colore, devo ricalcolare il prezzo
-        // IMPORTANTE: Devo recuperare il PREZZO BASE dal DB, altrimenti sommo su somme già fatte!
-        Scarpa scarpaDB = scarpaDAO.getScarpaById(s.getId()); // Metodo che recupera i dati originali
-        double prezzoBase = (scarpaDB != null) ? scarpaDB.getPrezzo() : 100.0; // Fallback
+        // --- LOGICA DI AGGIORNAMENTO DINAMICO (DELEGATA AL GESTORE) ---
+        // Recuperiamo i dati originali dal DB tramite il Gestore per avere il prezzo base corretto
+        Scarpa scarpaDB = gestore.recuperaScarpaPerId(s.getId());
 
         Runnable aggiornaPrezzo = () -> {
-            double nuovoPrezzo = prezzoBase;
-
-            // Logica Taglia
+            int t = (int) s.getTaglia();
             try {
-                int t = Integer.parseInt(comboTaglia.getValue());
+                t = Integer.parseInt(comboTaglia.getValue());
                 s.setTaglia(t); // Aggiorna oggetto sessione
-                if (t >= 45) nuovoPrezzo += 10.0;
             } catch (Exception ex) {}
 
-            // Logica Colore
             String c = comboColore.getValue();
-            if (c.contains("Limited")) nuovoPrezzo += 20.0;
-            else if (c.contains("Gold")) nuovoPrezzo += 50.0;
+
+            // CHIAMATA AL GESTORE per calcolare il nuovo prezzo (Business Logic)
+            double nuovoPrezzo = gestore.calcolaPrezzoDinamico(scarpaDB, t, c);
 
             // Aggiorna nome modello per riflettere colore
-            if (!c.equals("Standard")) {
+            if (c != null && !c.equals("Standard")) {
                 s.setModello(nomePulito + " (" + c + ")");
             } else {
                 s.setModello(nomePulito);
@@ -214,7 +210,7 @@ public class CarrelloGUIController {
         return card;
     }
 
-    // --- METODI NAVIGAZIONE E LOGIN (Già presenti) ---
+    // --- METODI NAVIGAZIONE E LOGIN ---
     @FXML private void handleProcediCheckout(ActionEvent event) {
         if (Sessione.getInstance().getCarrello().isEmpty()) {
             new Alert(Alert.AlertType.WARNING, "Il carrello è vuoto!").showAndWait();

@@ -13,6 +13,7 @@ CREATE TABLE UTENTE (
     USERNAME VARCHAR(50) NOT NULL PRIMARY KEY,
     EMAIL VARCHAR(100) NOT NULL UNIQUE,
     PASSWORD VARCHAR(50) NOT NULL,
+    RUOLO VARCHAR(20) DEFAULT 'CLIENTE',
     INDIRIZZO VARCHAR(100),
     CITTA VARCHAR(50),
     CAP VARCHAR(10),
@@ -78,12 +79,12 @@ CREATE TABLE carrello (
 );
 
 -- ==========================================
--- POPOLAMENTO DATI - UTENTI
+-- POPOLAMENTO DATI - UTENTI (AGGIORNATO CON RUOLO)
 -- ==========================================
-INSERT INTO UTENTE (USERNAME, EMAIL, PASSWORD, INDIRIZZO, CITTA, CAP, NUMERO_CARTA, SCADENZA_CARTA, CVV) VALUES
-('seller', 'admin@sneakup.com', 'admin', 'Via Centrale 1', 'Roma', '00100', '1111222233334444', '12/30', '999'),
-('mario', 'mario@email.com', '1234', 'Via Roma 10', 'Milano', '20100', '5555666677778888', '05/26', '123'),
-('lucia', 'lucia@email.com', '1234', 'Corso Italia 5', 'Napoli', '80100', '4444555566667777', '08/25', '456');
+INSERT INTO UTENTE (USERNAME, EMAIL, PASSWORD, RUOLO, INDIRIZZO, CITTA, CAP, NUMERO_CARTA, SCADENZA_CARTA, CVV) VALUES
+('seller', 'admin@sneakup.com', 'admin', 'VENDITORE', 'Via Centrale 1', 'Roma', '00100', '1111222233334444', '12/30', '999'),
+('mario', 'mario@email.com', '1234', 'CLIENTE', 'Via Roma 10', 'Milano', '20100', '5555666677778888', '05/26', '123'),
+('lucia', 'lucia@email.com', '1234', 'CLIENTE', 'Corso Italia 5', 'Napoli', '80100', '4444555566667777', '08/25', '456');
 
 -- ==========================================
 -- POPOLAMENTO DATI - SCARPE

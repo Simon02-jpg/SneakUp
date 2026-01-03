@@ -1,8 +1,9 @@
 package com.sneakup.view.gui.cliente;
 
+import com.sneakup.controller.GestoreProdotti; // IMPORT NUOVO: Controller Applicativo
 import com.sneakup.model.Sessione;
-import com.sneakup.model.dao.db.ScarpaDAOJDBC;
 import com.sneakup.model.domain.Scarpa;
+import com.sneakup.view.gui.common.LoginGUIController;
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -24,7 +25,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import com.sneakup.view.gui.common.LoginGUIController;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,8 +48,8 @@ public class ListaProdottiGUIController {
     private String currentGenere;
     private boolean isRicercaGlobale = false;
 
-    // DAO per accesso al database (Stelle e Prodotti)
-    private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
+    // MODIFICA BCE: Sostituito DAO con Gestore
+    private final GestoreProdotti gestore = new GestoreProdotti();
     private List<Scarpa> listaCompleta = new ArrayList<>();
 
     @FXML
@@ -93,7 +93,8 @@ public class ListaProdottiGUIController {
             this.currentCategoria = null;
             this.currentGenere = null;
 
-            this.listaCompleta = scarpaDAO.cercaPerNome(testo);
+            // CHIAMATA AL GESTORE
+            this.listaCompleta = gestore.ricercaGlobale(testo);
 
             if (txtRicerca != null) txtRicerca.setText(testo);
             eseguiFiltri();
@@ -102,8 +103,11 @@ public class ListaProdottiGUIController {
 
     private void caricaDatiDalDB() {
         try {
-            // Recupera le scarpe dal DB
-            List<Scarpa> rawData = scarpaDAO.cercaScarpe(currentBrand);
+            // CHIAMATA AL GESTORE: Recupera le scarpe
+            List<Scarpa> rawData = gestore.recuperaTutteLeScarpe(currentBrand);
+
+            if (rawData == null) rawData = new ArrayList<>(); // Safety check
+
             listaCompleta.clear();
 
             // Filtra in memoria per Categoria e Genere
@@ -142,11 +146,11 @@ public class ListaProdottiGUIController {
             }).collect(Collectors.toList());
         }
 
-        // --- FILTRI VALUTAZIONE (STELLE REALI DAL DB) ---
+        // --- FILTRI VALUTAZIONE (STELLE REALI DAL GESTORE) ---
         if ((chkS4 != null && chkS4.isSelected()) || (chkS3 != null && chkS3.isSelected())) {
             filtrati = filtrati.stream().filter(s -> {
-                // Chiama il DB per ogni scarpa per sapere la media vera
-                double mediaReale = scarpaDAO.getMediaVoti(s.getId());
+                // CHIAMATA AL GESTORE
+                double mediaReale = gestore.getMediaVoti(s.getId());
 
                 if (chkS4.isSelected() && mediaReale >= 4) return true;
                 if (chkS3.isSelected() && mediaReale >= 3) return true;
@@ -176,7 +180,7 @@ public class ListaProdottiGUIController {
         }
     }
 
-    // --- METODO CREAZIONE CARD (CON STELLE DAL DB E PREZZO BASE) ---
+    // --- METODO CREAZIONE CARD (CON STELLE DAL GESTORE) ---
     private HBox creaCardProdottoOrizzontale(Scarpa s) {
         HBox card = new HBox(15);
         card.setPadding(new Insets(15));
@@ -222,9 +226,9 @@ public class ListaProdottiGUIController {
         Label desc = new Label(s.getMarca() + " - " + s.getGenere());
         desc.setStyle("-fx-text-fill: gray;");
 
-        // === LOGICA STELLE REALE ===
-        // 1. Chiamiamo il DB
-        double mediaVoti = scarpaDAO.getMediaVoti(s.getId());
+        // === LOGICA STELLE REALE (VIA GESTORE) ===
+        // 1. Chiamiamo il GESTORE
+        double mediaVoti = gestore.getMediaVoti(s.getId());
         long votoArrotondato = Math.round(mediaVoti);
 
         HBox stelleBox = new HBox(2);
@@ -248,7 +252,6 @@ public class ListaProdottiGUIController {
         HBox.setHgrow(info, Priority.ALWAYS);
 
         // PREZZO: Qui mostriamo il prezzo BASE del DB formattato con i centesimi
-        // Il prezzo dinamico verrà calcolato solo nel dettaglio
         Label prezzo = new Label(String.format("€%.2f", s.getPrezzo()));
         prezzo.setFont(Font.font("System", FontWeight.BOLD, 24));
 
@@ -268,7 +271,7 @@ public class ListaProdottiGUIController {
             Parent root = loader.load();
 
             DettaglioProdottoGUIController controller = loader.getController();
-            controller.setDettagliScarpa(s); // Passiamo la scarpa base, il controller dettaglio calcolerà il prezzo
+            controller.setDettagliScarpa(s);
 
             // Passiamo lo stato corrente per poter tornare indietro correttamente
             String testoRicerca = isRicercaGlobale ? (txtRicerca != null ? txtRicerca.getText() : "") : null;
@@ -310,7 +313,6 @@ public class ListaProdottiGUIController {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Preferiti.fxml"));
                 Parent root = loader.load();
                 PreferitiGUIController ctrl = loader.getController();
-                // Passiamo i dati per poter tornare qui
                 ctrl.setProvenienza("/com/sneakup/view/ListaProdotti.fxml", this.currentBrand, this.currentGenere, this.currentCategoria, isRicercaGlobale ? txtRicerca.getText() : null, null);
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
                 stage.setScene(new Scene(root));
@@ -328,7 +330,6 @@ public class ListaProdottiGUIController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
             Parent root = loader.load();
             LoginGUIController loginCtrl = loader.getController();
-            // Passiamo i dati per tornare alla lista filtrata dopo il login
             loginCtrl.setProvenienza("/com/sneakup/view/ListaProdotti.fxml", this.currentBrand, this.currentGenere, this.currentCategoria);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));

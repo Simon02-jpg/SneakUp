@@ -1,5 +1,6 @@
 package com.sneakup.view.gui.cliente;
 
+import com.sneakup.controller.GestoreProdotti; // IMPORT GESTORE (BCE)
 import com.sneakup.model.Sessione;
 import com.sneakup.model.domain.Scarpa;
 import javafx.animation.ScaleTransition;
@@ -8,14 +9,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -38,7 +36,10 @@ public class PreferitiGUIController {
     // --- STATO PER IL RITORNO ---
     private String fxmlPrecedente = "/com/sneakup/view/Benvenuto.fxml";
     private String prevBrand, prevGenere, prevCategoria, prevRicerca;
-    private Scarpa scarpaPrecedente; // Fondamentale per tornare al Dettaglio corretta
+    private Scarpa scarpaPrecedente;
+
+    // MODIFICA BCE: Usiamo il Gestore invece del DAO diretto
+    private final GestoreProdotti gestore = new GestoreProdotti();
 
     @FXML
     public void initialize() {
@@ -57,21 +58,18 @@ public class PreferitiGUIController {
         }
     }
 
-    // --- METODI SET PROVENIENZA (Overloading per gestire diverse chiamate) ---
-
-    // Per chiamate semplici (es. da Area Personale, Menu, Login)
+    // --- METODI SET PROVENIENZA ---
     public void setProvenienza(String fxml) {
         this.fxmlPrecedente = fxml;
     }
 
-    // Per chiamate complete (es. da DettaglioProdotto o ListaProdotti)
     public void setProvenienza(String fxml, String brand, String genere, String categoria, String ricerca, Scarpa scarpa) {
         this.fxmlPrecedente = fxml;
         this.prevBrand = brand;
         this.prevGenere = genere;
         this.prevCategoria = categoria;
         this.prevRicerca = ricerca;
-        this.scarpaPrecedente = scarpa; // CORRETTO: Ora la variabile viene popolata
+        this.scarpaPrecedente = scarpa;
     }
 
     @FXML
@@ -89,7 +87,6 @@ public class PreferitiGUIController {
             }
             else if (controller instanceof DettaglioProdottoGUIController) {
                 DettaglioProdottoGUIController dp = (DettaglioProdottoGUIController) controller;
-                // Se abbiamo la scarpa salvata, la carichiamo nel dettaglio
                 if (scarpaPrecedente != null) {
                     dp.setDettagliScarpa(scarpaPrecedente);
                 }
@@ -107,7 +104,9 @@ public class PreferitiGUIController {
     }
 
     private void caricaPreferiti() {
+        if (gridPreferiti == null) return;
         gridPreferiti.getChildren().clear();
+
         List<Scarpa> preferiti = Sessione.getInstance().getPreferiti();
 
         if (preferiti.isEmpty()) {
@@ -119,8 +118,13 @@ public class PreferitiGUIController {
 
         int col = 0, row = 0;
         for (Scarpa s : preferiti) {
-            gridPreferiti.add(creaCard(s), col, row);
-            if (++col == 2) { col = 0; row++; }
+            // Recuperiamo i dati aggiornati (es. media voti) tramite il Gestore (BCE)
+            Scarpa sAggiornata = gestore.recuperaScarpaPerId(s.getId());
+
+            if (sAggiornata != null) {
+                gridPreferiti.add(creaCard(sAggiornata), col, row);
+                if (++col == 2) { col = 0; row++; }
+            }
         }
     }
 
@@ -130,10 +134,13 @@ public class PreferitiGUIController {
         card.setAlignment(Pos.CENTER_LEFT);
         card.setStyle("-fx-background-color: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2); -fx-background-radius: 12; -fx-cursor: hand;");
 
+        // Icona Rimuovi (Cuore pieno/Stella)
         Label stella = new Label("★");
         stella.setStyle("-fx-font-size: 30px; -fx-text-fill: #ffce00; -fx-cursor: hand;");
+        stella.setTooltip(new Tooltip("Rimuovi dai preferiti"));
+
         stella.setOnMouseClicked(e -> {
-            e.consume(); // Evita di aprire il dettaglio cliccando sulla stella
+            e.consume();
             Sessione.getInstance().rimuoviPreferito(s);
             caricaPreferiti();
         });
@@ -142,7 +149,7 @@ public class PreferitiGUIController {
         try {
             String path = (s.getUrlImmagine() != null) ? s.getUrlImmagine() : "/images/scarpa 1.png";
             img.setImage(new Image(getClass().getResource(path).toExternalForm()));
-        } catch (Exception e) { /* Fallback */ }
+        } catch (Exception e) { }
         img.setFitHeight(110); img.setFitWidth(140); img.setPreserveRatio(true);
 
         VBox info = new VBox(3);
@@ -151,14 +158,27 @@ public class PreferitiGUIController {
         marca.setFont(Font.font("System", FontWeight.BOLD, 12));
         Label nome = new Label(s.getModello());
         nome.setFont(Font.font("System", FontWeight.BOLD, 18));
+
+        // STELLE (Tramite Gestore)
+        double mediaVoti = gestore.getMediaVoti(s.getId());
+        HBox stelleBox = new HBox(2);
+        for(int i=1; i<=5; i++) {
+            Label star = new Label("★");
+            star.setStyle("-fx-font-size: 14px; -fx-text-fill: " + (i <= Math.round(mediaVoti) ? "#ffce00;" : "#e0e0e0;"));
+            stelleBox.getChildren().add(star);
+        }
+
         Label prezzo = new Label(String.format("€%.2f", s.getPrezzo()));
         prezzo.setFont(Font.font("System", FontWeight.BOLD, 16));
 
-        info.getChildren().addAll(marca, nome, prezzo);
+        info.getChildren().addAll(marca, nome, stelleBox, prezzo);
+
         card.getChildren().addAll(stella, img, info);
         HBox.setHgrow(info, Priority.ALWAYS);
 
-        card.setOnMouseClicked(e -> apriDettaglio(s, e));
+        card.setOnMouseClicked(e -> {
+            if (e.getTarget() != stella) apriDettaglio(s, e);
+        });
 
         return card;
     }

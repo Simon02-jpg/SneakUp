@@ -4,6 +4,7 @@ import com.sneakup.exception.SneakUpException;
 import com.sneakup.model.Sessione;
 import com.sneakup.model.dao.db.UtenteDAOJDBC;
 import com.sneakup.model.domain.Utente;
+import com.sneakup.model.domain.Ruolo; // <--- IMPORT AGGIUNTO
 import javafx.animation.ScaleTransition;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -74,10 +75,21 @@ public class DatiPersonaliGUIController {
     @FXML
     private void handleSalva(ActionEvent event) {
         String passwordFinale = nuovaPasswordField.getText().isEmpty() ? passwordAttuale : nuovaPasswordField.getText();
+
+        // CORREZIONE: Aggiunto Ruolo.CLIENTE (o il ruolo attuale) al costruttore
+        // Nota: Passiamo CLIENTE per soddisfare il costruttore, ma il DAO 'aggiornaUtente'
+        // è scritto per NON modificare il ruolo nel database, quindi è sicuro.
         Utente utenteAggiornato = new Utente(
-                usernameField.getText(), emailField.getText(), passwordFinale,
-                indirizzoField.getText(), cittaField.getText(), capField.getText(),
-                cartaField.getText(), scadenzaField.getText(), cvvField.getText()
+                usernameField.getText(),
+                emailField.getText(),
+                passwordFinale,
+                Ruolo.CLIENTE, // <--- PARAMETRO AGGIUNTO
+                indirizzoField.getText(),
+                cittaField.getText(),
+                capField.getText(),
+                cartaField.getText(),
+                scadenzaField.getText(),
+                cvvField.getText()
         );
 
         try {
@@ -129,7 +141,7 @@ public class DatiPersonaliGUIController {
     @FXML private void handleLoginGenerico(ActionEvent event) { navigaVerso("/com/sneakup/view/Login.fxml", event); }
     @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", event); }
 
-    // --- METODO CARRELLO CORRETTO ---
+    // --- METODO CARRELLO ---
     @FXML
     private void handleCarrello(ActionEvent event) {
         try {
@@ -138,14 +150,13 @@ public class DatiPersonaliGUIController {
 
             CarrelloGUIController ctrl = loader.getController();
 
-            // CORREZIONE: Aggiunto il sesto parametro 'null' per la Scarpa
             ctrl.setProvenienza(
                     "/com/sneakup/view/DatiPersonali.fxml",
                     null,
                     null,
                     null,
                     null,
-                    null  // <--- Parametro mancante aggiunto qui
+                    null
             );
 
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();

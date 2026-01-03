@@ -1,11 +1,10 @@
 package com.sneakup.view.gui.common;
 
-import com.sneakup.controller.LoginController;
+import com.sneakup.controller.LoginController; // USIAMO IL CONTROLLER DIRETTO
 import com.sneakup.model.Sessione;
-import com.sneakup.model.dao.db.UtenteDAOJDBC;
 import com.sneakup.model.domain.Utente;
+import com.sneakup.model.domain.Ruolo;
 import com.sneakup.util.AlertUtils;
-import com.sneakup.exception.SneakUpException;
 import com.sneakup.view.gui.cliente.CarrelloGUIController;
 import com.sneakup.view.gui.cliente.ListaProdottiGUIController;
 import com.sneakup.view.gui.cliente.SelezioneCategoriaGUIController;
@@ -36,6 +35,7 @@ public class LoginGUIController {
     @FXML private PasswordField passwordField;
     @FXML private Region barraAnimata;
 
+    // MODIFICA: Usiamo LoginController invece di GestoreUtenti per coerenza con il file che hai
     private final LoginController loginController = new LoginController();
 
     // --- DATI PER IL RITORNO ALLA PAGINA PRECEDENTE ---
@@ -51,7 +51,6 @@ public class LoginGUIController {
         }
     }
 
-    // NUOVO METODO: Accetta tutti i dettagli necessari per tornare indietro
     public void setProvenienza(String fxmlPath, String brand, String genere, String categoria) {
         this.paginaPrecedente = fxmlPath;
         this.brandPrecedente = brand;
@@ -69,91 +68,84 @@ public class LoginGUIController {
             return;
         }
 
-        try {
-            UtenteDAOJDBC utenteDAO = new UtenteDAOJDBC();
-            Utente u = utenteDAO.recuperaDatiUtente(inputEmail);
+        // 1. Chiamata al Controller
+        // Ora restituisce l'oggetto Utente completo (o null)
+        Utente utenteLoggato = loginController.login(inputEmail, pwd);
 
-            if (u != null && u.getPassword().equals(pwd)) {
-                String ruolo = u.getUsername().equalsIgnoreCase("seller") ? "ADMIN" : "CLIENTE";
-                Sessione.getInstance().login(u.getUsername(), ruolo);
+        if (utenteLoggato != null) {
+            // 2. Login riuscito: Aggiorna Sessione
 
-                System.out.println("Login effettuato: " + u.getUsername());
-
-                if (ruolo.equals("ADMIN")) {
-                    navigaVerso(event, "/com/sneakup/view/AreaVenditore.fxml");
-                } else {
-                    // --- LOGICA DI RITORNO ALLA PAGINA PRECEDENTE ---
-                    if (paginaPrecedente != null) {
-                        try {
-                            FXMLLoader loader = new FXMLLoader(getClass().getResource(paginaPrecedente));
-                            Parent root = loader.load();
-
-                            // Controlliamo in quale pagina dobbiamo tornare e reimpostiamo i dati
-                            Object controller = loader.getController();
-
-                            // CASO 1: Torno al Catalogo (Home Brand)
-                            if (controller instanceof VisualizzaCatalogoGUIController) {
-                                ((VisualizzaCatalogoGUIController) controller).setBrand(brandPrecedente);
-                            }
-                            // CASO 2: Torno alla Selezione Categorie (Corsa/Basket/Calcio)
-                            else if (controller instanceof SelezioneCategoriaGUIController) {
-                                // Ripristino Brand e Genere (es. NIKE - UOMO)
-                                String gen = (generePrecedente != null) ? generePrecedente : "CATEGORIE";
-                                ((SelezioneCategoriaGUIController) controller).setDati(gen, brandPrecedente);
-                            }
-                            // CASO 3: Torno alla Lista Prodotti (Le scarpe)
-                            else if (controller instanceof ListaProdottiGUIController) {
-                                // Ripristino Brand, Categoria e Genere (es. NIKE - CORSA - UOMO)
-                                ((ListaProdottiGUIController) controller).setFiltri(brandPrecedente, categoriaPrecedente, generePrecedente);
-                            }
-
-                            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                            stage.setScene(new Scene(root));
-                            stage.show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
-                        }
-                    } else {
-                        // Se non c'è una pagina precedente, vai alla Home
-                        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
-                    }
-                }
-
-            } else {
-                AlertUtils.mostraErrore("Email o password errati.");
+            // Recuperiamo il ruolo vero dal Database (tramite l'oggetto Utente)
+            String ruoloStringa = "CLIENTE"; // Default
+            if (utenteLoggato.getRuolo() != null) {
+                ruoloStringa = utenteLoggato.getRuolo().name();
             }
 
-        } catch (SneakUpException e) {
-            AlertUtils.mostraErrore("Errore Database: " + e.getMessage());
+            // Impostiamo la sessione
+            Sessione.getInstance().login(utenteLoggato.getUsername(), ruoloStringa);
+            Sessione.getInstance().setUtente(utenteLoggato);
+
+            System.out.println("Login effettuato: " + utenteLoggato.getUsername() + " | Ruolo: " + ruoloStringa);
+
+            // Navigazione in base al Ruolo
+            if (utenteLoggato.getRuolo() == Ruolo.VENDITORE) {
+                // Se è un venditore, va alla sua area dedicata
+                navigaVerso(event, "/com/sneakup/view/AreaVenditore.fxml");
+            } else {
+                // Se è un cliente, torna da dove era venuto o alla home
+                gestisciRitorno(event);
+            }
+
+        } else {
+            AlertUtils.mostraErrore("Email/Username o password errati.");
+        }
+    }
+
+    private void gestisciRitorno(ActionEvent event) {
+        if (paginaPrecedente != null) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource(paginaPrecedente));
+                Parent root = loader.load();
+
+                Object controller = loader.getController();
+
+                if (controller instanceof VisualizzaCatalogoGUIController) {
+                    ((VisualizzaCatalogoGUIController) controller).setBrand(brandPrecedente);
+                }
+                else if (controller instanceof SelezioneCategoriaGUIController) {
+                    String gen = (generePrecedente != null) ? generePrecedente : "CATEGORIE";
+                    ((SelezioneCategoriaGUIController) controller).setDati(gen, brandPrecedente);
+                }
+                else if (controller instanceof ListaProdottiGUIController) {
+                    ((ListaProdottiGUIController) controller).setFiltri(brandPrecedente, categoriaPrecedente, generePrecedente);
+                }
+
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
+                stage.show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
+            }
+        } else {
+            navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
         }
     }
 
     // --- ALTRI METODI DI NAVIGAZIONE ---
     @FXML private void handlePasswordDimenticata(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/RecuperoPassword.fxml"); }
     @FXML private void handleRegistrazione(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Registrazione.fxml"); }
-    // QUESTO È PER IL BOTTONE "HOME" (ActionEvent)
-    @FXML
-    private void handleReloadHome(ActionEvent event) {
-        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
-    }
+    @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
+    @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
+    @FXML private void handleLoginGoogle(ActionEvent event) { AlertUtils.mostraInfo("Funzione Google in arrivo."); }
 
-    // QUESTO È PER IL LOGO "SNEAK UP" (MouseEvent) - RINOMINATO PER EVITARE CONFLITTI
-    @FXML
-    private void handleReloadHomeMouse(MouseEvent event) {
-        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
-    }
-    @FXML private void handleLoginGoogle(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
     @FXML
     private void handleCarrello(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
             Parent root = loader.load();
-
-            // Passiamo la provenienza di default (Benvenuto)
             CarrelloGUIController ctrl = loader.getController();
-            ctrl.setProvenienza("/com/sneakup/view/Login.fxml", null, null, null, null,null);
-
+            ctrl.setProvenienza("/com/sneakup/view/Login.fxml", null, null, null, null, null);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
         } catch (IOException e) {
