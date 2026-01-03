@@ -77,21 +77,11 @@ public class RecuperoPasswordGUIController {
         }
     }
 
-    private void navigaVerso(String fxmlPath, java.util.EventObject event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            Parent root = loader.load();
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.show();
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
     // --- NAVIGAZIONE HOME (SDOPPIATA PER FAR FUNZIONARE FXML) ---
 
     // Metodo chiamato dal LOGO (onMouseClicked)
     @FXML
-    public void handleReloadHome(MouseEvent event) {
+    public void handleReloadHomeMouse(MouseEvent event) {
         vaiAlBenvenuto(event);
     }
 

@@ -20,7 +20,7 @@
             <children>
                 <HBox alignment="CENTER_LEFT" prefHeight="85.0" spacing="20.0" style="-fx-padding: 0 30 0 30;">
                     <children>
-                        <HBox alignment="CENTER_LEFT" onMouseClicked="#handleReloadHome" spacing="0" style="-fx-cursor: hand;">
+                        <HBox alignment="CENTER_LEFT" onMouseClicked="#handleReloadHomeMouse" spacing="0" style="-fx-cursor: hand;">
                             <children>
                                 <Label text="Sneak" textFill="WHITE"><font><Font name="System Bold" size="36.0" /></font></Label>
                                 <Label text="Up" textFill="BLACK"><font><Font name="System Bold" size="36.0" /></font></Label>
@@ -32,9 +32,9 @@
                         <HBox alignment="CENTER" onMouseExited="#nascondiBarra" spacing="35.0">
                             <children>
                                 <Button fx:id="btnHome" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Home" />
-                                <Button onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Carrello" />
-                                <Button onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Stato ordine" />
-                                <Button onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" />
+                                <Button fx:id="btnCarrello" onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Carrello" />
+                                <Button fx:id="btnStato" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Stato ordine" />
+                                <Button fx:id="btnPreferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" />
                             </children>
                         </HBox>
 

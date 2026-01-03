@@ -112,7 +112,7 @@ public class DatiPersonaliGUIController {
     }
 
     @FXML
-    private void handleReloadHome(MouseEvent event) {
+    private void handleReloadHomeMouse(MouseEvent event) {
         navigaVerso("/com/sneakup/view/Benvenuto.fxml", event);
     }
 

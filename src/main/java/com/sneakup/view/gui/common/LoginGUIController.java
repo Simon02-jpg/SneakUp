@@ -132,8 +132,17 @@ public class LoginGUIController {
     // --- ALTRI METODI DI NAVIGAZIONE ---
     @FXML private void handlePasswordDimenticata(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/RecuperoPassword.fxml"); }
     @FXML private void handleRegistrazione(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Registrazione.fxml"); }
-    @FXML private void handleReloadHome(ActionEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
-    @FXML private void handleReloadHome(MouseEvent event) { navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml"); }
+    // QUESTO È PER IL BOTTONE "HOME" (ActionEvent)
+    @FXML
+    private void handleReloadHome(ActionEvent event) {
+        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
+    }
+
+    // QUESTO È PER IL LOGO "SNEAK UP" (MouseEvent) - RINOMINATO PER EVITARE CONFLITTI
+    @FXML
+    private void handleReloadHomeMouse(MouseEvent event) {
+        navigaVerso(event, "/com/sneakup/view/Benvenuto.fxml");
+    }
     @FXML private void handleLoginGoogle(ActionEvent event) { AlertUtils.mostraInfo("Non disponibile."); }
     @FXML
     private void handleCarrello(ActionEvent event) {

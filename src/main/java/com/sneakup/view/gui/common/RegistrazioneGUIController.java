@@ -62,8 +62,10 @@ public class RegistrazioneGUIController {
     }
 
     // --- NAVIGAZIONE HOME (Come Benvenuto.fxml) ---
-    @FXML private void handleReloadHome(MouseEvent event) { vaiAlBenvenuto(event); }
+
+    @FXML private void handleReloadHomeMouse(MouseEvent event) { vaiAlBenvenuto(event); }
     @FXML private void handleReloadHome(ActionEvent event) { vaiAlBenvenuto(event); }
+
 
     // --- TASTO ANNULLA (Cruciale) ---
     @FXML
