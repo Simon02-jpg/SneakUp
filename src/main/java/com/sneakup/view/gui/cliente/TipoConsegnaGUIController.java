@@ -60,21 +60,14 @@ public class TipoConsegnaGUIController {
     private void handleTornaIndietro(ActionEvent event) {
         try {
             String target;
-
-            // --- FIX LOGICA INDIETRO PER EVITARE IL BLOCCO ---
+            // Logica per tornare indietro correttamente senza loop
             if (Sessione.getInstance().isLoggato()) {
-                // SE LOGGATO: Non possiamo tornare a Pagamento.fxml (perché ci rimanderebbe qui in loop).
-                // Dobbiamo tornare al Carrello o al Dettaglio Prodotto.
-
                 if (prodottoAcquistoSingolo != null) {
-                    // Caso "Acquista Ora": Torniamo al Dettaglio Prodotto
                     target = "/com/sneakup/view/DettaglioProdotto.fxml";
                 } else {
-                    // Caso "Carrello": Torniamo al Carrello
                     target = "/com/sneakup/view/Carrello.fxml";
                 }
             } else {
-                // SE OSPITE: Torniamo a Pagamento.fxml (per permettere di fare login o cambiare scelta)
                 target = (prevFxml != null && !prevFxml.isEmpty()) ? prevFxml : "/com/sneakup/view/Carrello.fxml";
             }
 
@@ -82,24 +75,18 @@ public class TipoConsegnaGUIController {
             Parent root = loader.load();
             Object controller = loader.getController();
 
-            // Configurazione del controller di destinazione (passaggio dati indietro)
             if (controller instanceof PagamentoGUIController) {
                 ((PagamentoGUIController) controller).setDatiNavigazione(
                         "/com/sneakup/view/Carrello.fxml",
                         scarpaDettaglio, prodottoAcquistoSingolo,
                         prevBrand, prevGen, prevCat, prevRicerca);
-            }
-            else if (controller instanceof CarrelloGUIController) {
-                // Tornando al carrello, resettiamo la provenienza per il tasto indietro del carrello
+            } else if (controller instanceof CarrelloGUIController) {
                 ((CarrelloGUIController) controller).setProvenienza(
                         "/com/sneakup/view/ListaProdotti.fxml",
                         prevBrand, prevGen, prevCat, prevRicerca, scarpaDettaglio, null);
-            }
-            else if (controller instanceof DettaglioProdottoGUIController) {
+            } else if (controller instanceof DettaglioProdottoGUIController) {
                 DettaglioProdottoGUIController dp = (DettaglioProdottoGUIController) controller;
-                // Ripristiniamo la scarpa corretta
                 dp.setDettagliScarpa(scarpaDettaglio != null ? scarpaDettaglio : prodottoAcquistoSingolo);
-                // Se torniamo al dettaglio, il suo "indietro" deve portare alla lista
                 dp.setProvenienza("/com/sneakup/view/ListaProdotti.fxml");
                 dp.setStatoPrecedente(prevBrand, prevGen, prevCat, prevRicerca);
             }
@@ -109,18 +96,33 @@ public class TipoConsegnaGUIController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            // Fallback di sicurezza in caso di errore grave: Torna alla Home
             navigaVerso("/com/sneakup/view/Benvenuto.fxml", event);
         }
     }
 
+    // --- CORREZIONE QUI: APRIRE RITIRO.FXML ---
     @FXML
     private void handleRitiro(ActionEvent event) {
-        finalizzaOrdine("Ritiro in negozio", event);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Ritiro.fxml"));
+            Parent root = loader.load();
+
+            RitiroGUIController ctrl = loader.getController();
+            // Passiamo i dati a RitiroGUIController per mantenere lo stato
+            ctrl.setDatiNavigazione(prevFxml, scarpaDettaglio, prodottoAcquistoSingolo,
+                    prevBrand, prevGen, prevCat, prevRicerca);
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) {
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Impossibile caricare la schermata di ritiro.").showAndWait();
+        }
     }
 
     @FXML
     private void handleSpedizione(ActionEvent event) {
+        // La spedizione invece conclude subito l'ordine (o potrebbe aprire un form indirizzo)
         finalizzaOrdine("Spedizione a domicilio", event);
     }
 
@@ -129,19 +131,16 @@ public class TipoConsegnaGUIController {
         if (prodottoAcquistoSingolo != null) {
             totale = prodottoAcquistoSingolo.getPrezzo();
         } else {
-            // Calcolo totale carrello
             for(Scarpa s : Sessione.getInstance().getCarrello()) {
                 totale += s.getPrezzo();
             }
         }
 
-        // Calcolo Spedizione Finale
-        double costoSped = 9.99; // Default
-
+        double costoSped = 9.99;
+        // Gratis se Ritiro (ma qui siamo in spedizione) o se Loggato e > 100
         if (tipo.contains("Ritiro")) {
-            costoSped = 0.0; // Ritiro sempre gratis
+            costoSped = 0.0;
         } else {
-            // Spedizione domicilio: Gratis se Loggato E Totale > 100
             if (Sessione.getInstance().isLoggato() && totale > 100.00) {
                 costoSped = 0.0;
             }
@@ -156,12 +155,10 @@ public class TipoConsegnaGUIController {
 
         new Alert(Alert.AlertType.INFORMATION, msg).showAndWait();
 
-        // Svuota carrello se era un acquisto carrello
         if (prodottoAcquistoSingolo == null) {
             Sessione.getInstance().svuotaCarrello();
         }
 
-        // Torna alla home
         try {
             Parent root = FXMLLoader.load(getClass().getResource("/com/sneakup/view/Benvenuto.fxml"));
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
