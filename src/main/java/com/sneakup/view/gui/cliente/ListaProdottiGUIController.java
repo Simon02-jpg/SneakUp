@@ -25,10 +25,10 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import com.sneakup.view.gui.common.LoginGUIController;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 public class ListaProdottiGUIController {
@@ -48,12 +48,15 @@ public class ListaProdottiGUIController {
     private String currentGenere;
     private boolean isRicercaGlobale = false;
 
+    // DAO per accesso al database (Stelle e Prodotti)
     private final ScarpaDAOJDBC scarpaDAO = new ScarpaDAOJDBC();
     private List<Scarpa> listaCompleta = new ArrayList<>();
 
     @FXML
     public void initialize() {
         if (barraAnimata != null) barraAnimata.setOpacity(0.0);
+
+        // Gestione Utente Loggato
         if (Sessione.getInstance().isLoggato()) {
             if (btnLogin != null) { btnLogin.setVisible(false); btnLogin.setManaged(false); }
             if (lblUser != null) {
@@ -62,6 +65,7 @@ public class ListaProdottiGUIController {
                 lblUser.setManaged(true);
             }
         }
+
         if (comboOrdina != null) comboOrdina.getItems().addAll("Prezzo Crescente", "Prezzo Decrescente");
         if (txtRicerca != null) txtRicerca.textProperty().addListener((o, oldV, newV) -> eseguiFiltri());
     }
@@ -71,8 +75,10 @@ public class ListaProdottiGUIController {
         this.currentBrand = brand;
         this.currentCategoria = categoria;
         this.currentGenere = genere;
-        if (lblBrandTitolo != null) lblBrandTitolo.setText(brand.toUpperCase());
-        if (lblCategoriaTitolo != null) lblCategoriaTitolo.setText(categoria.toUpperCase() + " - " + genere.toUpperCase());
+
+        if (lblBrandTitolo != null) lblBrandTitolo.setText(brand != null ? brand.toUpperCase() : "");
+        if (lblCategoriaTitolo != null) lblCategoriaTitolo.setText((categoria != null ? categoria.toUpperCase() : "") + " - " + (genere != null ? genere.toUpperCase() : ""));
+
         caricaDatiDalDB();
         eseguiFiltri();
     }
@@ -82,11 +88,13 @@ public class ListaProdottiGUIController {
         try {
             if (lblBrandTitolo != null) lblBrandTitolo.setText("RISULTATI");
             if (lblCategoriaTitolo != null) lblCategoriaTitolo.setText("Ricerca: \"" + testo.toUpperCase() + "\"");
-            this.currentBrand = null; this.currentCategoria = null; this.currentGenere = null;
+
+            this.currentBrand = null;
+            this.currentCategoria = null;
+            this.currentGenere = null;
+
             this.listaCompleta = scarpaDAO.cercaPerNome(testo);
-            for (Scarpa s : listaCompleta) {
-                if (s.getMockVoto() == 0) s.setMockVoto(new Random().nextInt(3) + 3);
-            }
+
             if (txtRicerca != null) txtRicerca.setText(testo);
             eseguiFiltri();
         } catch (Exception e) { e.printStackTrace(); }
@@ -94,13 +102,16 @@ public class ListaProdottiGUIController {
 
     private void caricaDatiDalDB() {
         try {
+            // Recupera le scarpe dal DB
             List<Scarpa> rawData = scarpaDAO.cercaScarpe(currentBrand);
             listaCompleta.clear();
+
+            // Filtra in memoria per Categoria e Genere
             for (Scarpa s : rawData) {
-                boolean matchCat = s.getCategoria() != null && s.getCategoria().equalsIgnoreCase(currentCategoria);
+                boolean matchCat = (currentCategoria == null) || (s.getCategoria() != null && s.getCategoria().equalsIgnoreCase(currentCategoria));
                 boolean matchGen = (currentGenere == null) || (s.getGenere() != null && s.getGenere().equalsIgnoreCase(currentGenere));
+
                 if (matchCat && matchGen) {
-                    if (s.getMockVoto() == 0) s.setMockVoto(new Random().nextInt(3) + 3);
                     listaCompleta.add(s);
                 }
             }
@@ -110,13 +121,16 @@ public class ListaProdottiGUIController {
     private void eseguiFiltri() {
         if (gridProdotti == null) return;
         gridProdotti.getChildren().clear();
+
         List<Scarpa> filtrati = new ArrayList<>(listaCompleta);
 
+        // Filtro Ricerca Testuale
         if (txtRicerca != null && !txtRicerca.getText().isEmpty()) {
             String testo = txtRicerca.getText().toLowerCase().trim();
             filtrati = filtrati.stream().filter(s -> s.getModello().toLowerCase().contains(testo)).collect(Collectors.toList());
         }
 
+        // Filtri Prezzo
         if (chkP1 != null && (chkP1.isSelected() || chkP2.isSelected() || chkP3.isSelected() || chkP4.isSelected())) {
             filtrati = filtrati.stream().filter(s -> {
                 double p = s.getPrezzo();
@@ -128,28 +142,41 @@ public class ListaProdottiGUIController {
             }).collect(Collectors.toList());
         }
 
-        if (chkS4 != null && chkS4.isSelected()) {
-            filtrati = filtrati.stream().filter(s -> Math.max(s.getMediaVoti(), s.getMockVoto()) >= 4).collect(Collectors.toList());
-        } else if (chkS3 != null && chkS3.isSelected()) {
-            filtrati = filtrati.stream().filter(s -> Math.max(s.getMediaVoti(), s.getMockVoto()) >= 3).collect(Collectors.toList());
+        // --- FILTRI VALUTAZIONE (STELLE REALI DAL DB) ---
+        if ((chkS4 != null && chkS4.isSelected()) || (chkS3 != null && chkS3.isSelected())) {
+            filtrati = filtrati.stream().filter(s -> {
+                // Chiama il DB per ogni scarpa per sapere la media vera
+                double mediaReale = scarpaDAO.getMediaVoti(s.getId());
+
+                if (chkS4.isSelected() && mediaReale >= 4) return true;
+                if (chkS3.isSelected() && mediaReale >= 3) return true;
+                return false;
+            }).collect(Collectors.toList());
         }
 
+        // Ordinamento
         if (comboOrdina != null && comboOrdina.getValue() != null) {
             String ordine = comboOrdina.getValue();
             if ("Prezzo Crescente".equals(ordine)) filtrati.sort((s1, s2) -> Double.compare(s1.getPrezzo(), s2.getPrezzo()));
             else if ("Prezzo Decrescente".equals(ordine)) filtrati.sort((s1, s2) -> Double.compare(s2.getPrezzo(), s1.getPrezzo()));
         }
 
+        // Creazione Griglia
         int col = 0; int row = 0;
         for (Scarpa s : filtrati) {
             gridProdotti.add(creaCardProdottoOrizzontale(s), col, row);
             col++;
             if (col == 2) { col = 0; row++; }
         }
-        if (filtrati.isEmpty()) gridProdotti.add(new Label("Nessun prodotto trovato."), 0, 0);
+
+        if (filtrati.isEmpty()) {
+            Label empty = new Label("Nessun prodotto trovato con questi filtri.");
+            empty.setStyle("-fx-font-size: 16px; -fx-text-fill: gray; -fx-padding: 20;");
+            gridProdotti.add(empty, 0, 0);
+        }
     }
 
-    // --- METODO CREAZIONE CARD (CON ANIMAZIONE E CLICK) ---
+    // --- METODO CREAZIONE CARD (CON STELLE DAL DB E PREZZO BASE) ---
     private HBox creaCardProdottoOrizzontale(Scarpa s) {
         HBox card = new HBox(15);
         card.setPadding(new Insets(15));
@@ -158,12 +185,11 @@ public class ListaProdottiGUIController {
         card.setPrefHeight(180.0);
 
         // --- STELLA PREFERITI ---
-        Label stella = new Label("★");
+        Label stellaFav = new Label("★");
         boolean isFav = Sessione.getInstance().isPreferito(s);
-        stella.setStyle("-fx-font-size: 30px; -fx-cursor: hand; -fx-text-fill: " + (isFav ? "#ffce00;" : "#cccccc;"));
+        stellaFav.setStyle("-fx-font-size: 30px; -fx-cursor: hand; -fx-text-fill: " + (isFav ? "#ffce00;" : "#cccccc;"));
 
-        // Gestione Click Stella (CONSUMA L'EVENTO per non aprire i dettagli)
-        stella.setOnMouseClicked(e -> {
+        stellaFav.setOnMouseClicked(e -> {
             e.consume();
             if (!Sessione.getInstance().isLoggato()) {
                 new Alert(Alert.AlertType.WARNING, "Accedi per aggiungere ai preferiti.").showAndWait();
@@ -171,10 +197,10 @@ public class ListaProdottiGUIController {
             }
             if (Sessione.getInstance().isPreferito(s)) {
                 Sessione.getInstance().rimuoviPreferito(s);
-                stella.setStyle("-fx-font-size: 30px; -fx-text-fill: #cccccc; -fx-cursor: hand;");
+                stellaFav.setStyle("-fx-font-size: 30px; -fx-text-fill: #cccccc; -fx-cursor: hand;");
             } else {
                 Sessione.getInstance().aggiungiPreferito(s);
-                stella.setStyle("-fx-font-size: 30px; -fx-text-fill: #ffce00; -fx-cursor: hand;");
+                stellaFav.setStyle("-fx-font-size: 30px; -fx-text-fill: #ffce00; -fx-cursor: hand;");
             }
         });
 
@@ -186,84 +212,84 @@ public class ListaProdottiGUIController {
         } catch (Exception e) {}
         img.setFitHeight(130); img.setFitWidth(160); img.setPreserveRatio(true);
 
-        // --- INFO ---
+        // --- INFO PRODOTTO ---
         VBox info = new VBox(5);
         info.setAlignment(Pos.CENTER_LEFT);
+
         Label nome = new Label(s.getModello());
         nome.setFont(Font.font("System", FontWeight.BOLD, 22));
+
         Label desc = new Label(s.getMarca() + " - " + s.getGenere());
         desc.setStyle("-fx-text-fill: gray;");
 
+        // === LOGICA STELLE REALE ===
+        // 1. Chiamiamo il DB
+        double mediaVoti = scarpaDAO.getMediaVoti(s.getId());
+        long votoArrotondato = Math.round(mediaVoti);
+
         HBox stelleBox = new HBox(2);
-        int voto = Math.max(s.getMockVoto(), (int)s.getMediaVoti());
-        if(voto == 0) voto = 4;
-        for(int i=0; i<5; i++) {
+        for(int i=1; i<=5; i++) {
             Label star = new Label("★");
-            star.setStyle("-fx-font-size: 18px; -fx-text-fill: " + (i < voto ? "#ffce00;" : "#e0e0e0;"));
+            // Se l'indice è <= al voto arrotondato, è gialla. Altrimenti grigia.
+            String colore = (i <= votoArrotondato) ? "#ffce00;" : "#e0e0e0;";
+            star.setStyle("-fx-font-size: 18px; -fx-text-fill: " + colore);
             stelleBox.getChildren().add(star);
         }
+
+        // Numero testuale (opzionale)
+        if (mediaVoti > 0) {
+            Label lblMedia = new Label(String.format(" (%.1f)", mediaVoti));
+            lblMedia.setStyle("-fx-text-fill: gray; -fx-font-size: 12px;");
+            stelleBox.getChildren().add(lblMedia);
+        }
+        // ===========================
+
         info.getChildren().addAll(nome, desc, stelleBox);
         HBox.setHgrow(info, Priority.ALWAYS);
 
-        Label prezzo = new Label(String.format("€%.0f", s.getPrezzo()));
+        // PREZZO: Qui mostriamo il prezzo BASE del DB formattato con i centesimi
+        // Il prezzo dinamico verrà calcolato solo nel dettaglio
+        Label prezzo = new Label(String.format("€%.2f", s.getPrezzo()));
         prezzo.setFont(Font.font("System", FontWeight.BOLD, 24));
 
-        card.getChildren().addAll(stella, img, info, prezzo);
+        card.getChildren().addAll(stellaFav, img, info, prezzo);
 
-        // --- CLICK SULLA CARD (SEMPLIFICATO SENZA ANIMAZIONE PER TEST) ---
-        // Se questo funziona, poi rimettiamo l'animazione.
-        // L'importante ora è capire perché non cambia pagina.
+        // Click sulla card -> Vai al dettaglio
         card.setOnMouseClicked(e -> {
-            // Se l'utente ha cliccato sulla stella, ci ha già pensato l'handler sopra (e.consume)
-            // Se arriviamo qui, l'utente ha cliccato sulla parte bianca della card
-            apriDettaglioProdotto(s, e);
+            if (e.getTarget() != stellaFav) apriDettaglioProdotto(s, e);
         });
 
         return card;
     }
 
-    // --- METODO DI NAVIGAZIONE CON DEBUG AVANZATO ---
     private void apriDettaglioProdotto(Scarpa s, MouseEvent e) {
         try {
-            // Controlli di sicurezza...
-            if (getClass().getResource("/com/sneakup/view/DettaglioProdotto.fxml") == null) {
-                new Alert(Alert.AlertType.ERROR, "File FXML non trovato!").showAndWait();
-                return;
-            }
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/DettaglioProdotto.fxml"));
             Parent root = loader.load();
 
             DettaglioProdottoGUIController controller = loader.getController();
-            controller.setDettagliScarpa(s);
+            controller.setDettagliScarpa(s); // Passiamo la scarpa base, il controller dettaglio calcolerà il prezzo
 
-            // === [NOVITÀ] PASSIAMO LO STATO CORRENTE ===
-            // Se siamo in ricerca globale, passiamo il testo della ricerca, altrimenti i filtri
+            // Passiamo lo stato corrente per poter tornare indietro correttamente
             String testoRicerca = isRicercaGlobale ? (txtRicerca != null ? txtRicerca.getText() : "") : null;
-
-            controller.setStatoPrecedente(
-                    this.currentBrand,
-                    this.currentCategoria,
-                    this.currentGenere,
-                    testoRicerca
-            );
-            // ===========================================
+            controller.setStatoPrecedente(this.currentBrand, this.currentCategoria, this.currentGenere, testoRicerca);
 
             Stage stage = (Stage) ((Node) e.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-
         } catch (Exception ex) {
             ex.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Errore apertura dettagli: " + ex.getMessage()).showAndWait();
         }
     }
 
-    // --- ALTRI METODI FXML ---
+    // --- NAVIGAZIONE E BOTTONI ---
     @FXML public void handleRicercaKey(KeyEvent event) { eseguiFiltri(); }
     @FXML public void handleFiltroAction(ActionEvent event) { eseguiFiltri(); }
+
     @FXML private void handleIndietro(ActionEvent event) {
-        if (isRicercaGlobale) navigaVerso("/com/sneakup/view/Benvenuto.fxml", event);
-        else {
+        if (isRicercaGlobale) {
+            navigaVerso("/com/sneakup/view/Benvenuto.fxml", event);
+        } else {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/SelezioneCategoria.fxml"));
                 Parent root = loader.load();
@@ -274,16 +300,35 @@ public class ListaProdottiGUIController {
             } catch (IOException e) { e.printStackTrace(); }
         }
     }
+
     @FXML private void handleReloadHome(ActionEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaVerso("/com/sneakup/view/Benvenuto.fxml", event); }
 
-    // Metodo Login Corretto
+    @FXML private void handlePreferiti(ActionEvent event) {
+        if(Sessione.getInstance().isLoggato()) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Preferiti.fxml"));
+                Parent root = loader.load();
+                PreferitiGUIController ctrl = loader.getController();
+                // Passiamo i dati per poter tornare qui
+                ctrl.setProvenienza("/com/sneakup/view/ListaProdotti.fxml", this.currentBrand, this.currentGenere, this.currentCategoria, isRicercaGlobale ? txtRicerca.getText() : null, null);
+                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+                stage.setScene(new Scene(root));
+            } catch (Exception e) { e.printStackTrace(); }
+        } else {
+            new Alert(Alert.AlertType.WARNING, "Accedi per vedere i tuoi preferiti.").showAndWait();
+        }
+    }
+
+    @FXML private void handleVaiAreaPersonale(MouseEvent event) { navigaVerso("/com/sneakup/view/AreaPersonale.fxml", event); }
+
     @FXML
     private void handleLoginGenerico(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Login.fxml"));
             Parent root = loader.load();
             LoginGUIController loginCtrl = loader.getController();
+            // Passiamo i dati per tornare alla lista filtrata dopo il login
             loginCtrl.setProvenienza("/com/sneakup/view/ListaProdotti.fxml", this.currentBrand, this.currentGenere, this.currentCategoria);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
@@ -291,86 +336,20 @@ public class ListaProdottiGUIController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // --- GESTIONE CARRELLO (HEADER) ---
     @FXML
     private void handleCarrello(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
             Parent root = loader.load();
-
             CarrelloGUIController ctrl = loader.getController();
-
             String ricerca = isRicercaGlobale ? (txtRicerca != null ? txtRicerca.getText() : "") : null;
-
-            // CORREZIONE: Aggiungiamo 'null' come sesto parametro perché non veniamo da un dettaglio scarpa
-            ctrl.setProvenienza(
-                    "/com/sneakup/view/ListaProdotti.fxml",
-                    this.currentBrand,
-                    this.currentGenere,
-                    this.currentCategoria,
-                    ricerca,
-                    null  // <--- Questo risolve l'errore!
-            );
-
+            ctrl.setProvenienza("/com/sneakup/view/ListaProdotti.fxml", this.currentBrand, this.currentGenere, this.currentCategoria, ricerca, null);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(root));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
-    // --- GESTIONE PREFERITI (HEADER) ---
-    @FXML
-    private void handlePreferiti(ActionEvent event) {
-        if(Sessione.getInstance().isLoggato()) {
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Preferiti.fxml"));
-                Parent root = loader.load();
-
-                PreferitiGUIController ctrl = loader.getController();
-
-                String ricerca = isRicercaGlobale ? (txtRicerca != null ? txtRicerca.getText() : "") : null;
-
-                // Passiamo la provenienza anche ai preferiti così sanno come tornare qui
-                ctrl.setProvenienza(
-                        "/com/sneakup/view/ListaProdotti.fxml",
-                        this.currentBrand,
-                        this.currentGenere,
-                        this.currentCategoria,
-                        ricerca,
-                        null // Nessuna scarpa specifica selezionata
-                );
-
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(new Scene(root));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            new Alert(Alert.AlertType.WARNING, "Accedi per vedere i tuoi preferiti.").showAndWait();
-        }
-    }
-
-    // --- AREA PERSONALE (HEADER) ---
-    @FXML
-    private void handleVaiAreaPersonale(MouseEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/AreaPersonale.fxml"));
-            Parent root = loader.load();
-
-            AreaPersonaleGUIController ctrl = loader.getController();
-
-            // Permettiamo all'Area Personale di sapere che veniamo da questa lista
-            ctrl.setProvenienza("/com/sneakup/view/ListaProdotti.fxml", this.currentBrand);
-
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML private void handleStatoOrdine(ActionEvent event) { new Alert(Alert.AlertType.INFORMATION, "Stato ordine in arrivo").showAndWait(); }
+    @FXML private void handleStatoOrdine(ActionEvent event) { new Alert(Alert.AlertType.INFORMATION, "Servizio di tracking non disponibile al momento.").showAndWait(); }
 
     private void navigaVerso(String fxml, java.util.EventObject e) {
         try {
@@ -380,6 +359,7 @@ public class ListaProdottiGUIController {
         } catch (IOException ex) { ex.printStackTrace(); }
     }
 
+    // --- ANIMAZIONI ---
     @FXML public void mostraEmuoviBarra(MouseEvent event) { Node source = (Node) event.getSource(); Bounds b = source.localToScene(source.getBoundsInLocal()); Parent p = barraAnimata.getParent(); Point2D loc = p.sceneToLocal(b.getMinX(), b.getMinY()); barraAnimata.setLayoutX(loc.getX()); barraAnimata.setPrefWidth(b.getWidth()); barraAnimata.setOpacity(1.0); }
     @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata!=null) barraAnimata.setOpacity(0.0); }
     @FXML public void sottolineaUser(MouseEvent e) { lblUser.setUnderline(true); }

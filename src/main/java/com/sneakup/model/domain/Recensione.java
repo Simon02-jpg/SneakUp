@@ -1,26 +1,42 @@
 package com.sneakup.model.domain;
 
-import java.io.Serializable;
+import java.sql.Timestamp;
 
-public class Recensione implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    private String autore;
-    private int voto; // Valore da 1 a 5
+public class Recensione {
+    private int id;
+    private int idScarpa;
+    private String username;
+    private int voto;
     private String testo;
+    private Timestamp dataInserimento;
 
-    public Recensione(String autore, int voto, String testo) {
-        this.autore = autore;
+    public Recensione() {}
+
+    public Recensione(int id, int idScarpa, String username, int voto, String testo, Timestamp dataInserimento) {
+        this.id = id;
+        this.idScarpa = idScarpa;
+        this.username = username;
         this.voto = voto;
         this.testo = testo;
+        this.dataInserimento = dataInserimento;
     }
 
-    public String getAutore() { return autore; }
+    // Getters e Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+
+    public int getIdScarpa() { return idScarpa; }
+    public void setIdScarpa(int idScarpa) { this.idScarpa = idScarpa; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
     public int getVoto() { return voto; }
-    public String getTesto() { return testo; }
+    public void setVoto(int voto) { this.voto = voto; }
 
-    @Override
-    public String toString() {
-        return String.format("%s (%d/5): %s", autore, voto, testo);
-    }
+    public String getTesto() { return testo; }
+    public void setTesto(String testo) { this.testo = testo; }
+
+    public Timestamp getDataInserimento() { return dataInserimento; }
+    public void setDataInserimento(Timestamp dataInserimento) { this.dataInserimento = dataInserimento; }
 }

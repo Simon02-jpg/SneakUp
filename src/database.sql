@@ -22,15 +22,15 @@ CREATE TABLE UTENTE (
 );
 
 -- ==========================================
--- 2. TABELLA SCARPE (CON GENERE)
+-- 2. TABELLA SCARPE
 -- ==========================================
 DROP TABLE IF EXISTS SCARPE;
 CREATE TABLE SCARPE (
     idSCARPA INT AUTO_INCREMENT PRIMARY KEY,
     modello VARCHAR(100) NOT NULL,
     marca VARCHAR(50) NOT NULL,
-    categoria VARCHAR(50), -- Corsa, Basket, Calcio
-    genere VARCHAR(10) NOT NULL, -- UOMO, DONNA
+    categoria VARCHAR(50),
+    genere VARCHAR(10) NOT NULL,
     taglia DOUBLE NOT NULL,
     prezzo DOUBLE NOT NULL,
     quantita INT NOT NULL DEFAULT 0,
@@ -43,20 +43,21 @@ CREATE TABLE SCARPE (
 -- ==========================================
 DROP TABLE IF EXISTS RECENSIONE;
 CREATE TABLE RECENSIONE (
-    idRECENSIONE INT AUTO_INCREMENT PRIMARY KEY,
-    idSCARPA INT NOT NULL,
-    USERNAME VARCHAR(50) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_scarpa INT NOT NULL,
+    username_utente VARCHAR(50) NOT NULL,
     voto INT NOT NULL CHECK (voto >= 1 AND voto <= 5),
     testo TEXT,
-    data_recensione DATE DEFAULT (CURRENT_DATE),
-    FOREIGN KEY (idSCARPA) REFERENCES SCARPE(idSCARPA) ON DELETE CASCADE,
-    FOREIGN KEY (USERNAME) REFERENCES UTENTE(USERNAME) ON DELETE CASCADE
+    data_inserimento TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_scarpa) REFERENCES SCARPE(idSCARPA) ON DELETE CASCADE,
+    FOREIGN KEY (username_utente) REFERENCES UTENTE(USERNAME) ON DELETE CASCADE
 );
 
 -- ==========================================
--- 4. TABELLA PREFERITI (AGGIUNTA PER LA TUA NUOVA FUNZIONALITÀ)
+-- 4. TABELLA PREFERITI
 -- ==========================================
-CREATE TABLE IF NOT EXISTS PREFERITI (
+DROP TABLE IF EXISTS PREFERITI;
+CREATE TABLE PREFERITI (
     utente VARCHAR(50) NOT NULL,
     id_scarpa INT NOT NULL,
     PRIMARY KEY (utente, id_scarpa),
@@ -65,13 +66,13 @@ CREATE TABLE IF NOT EXISTS PREFERITI (
 );
 
 -- ==========================================
--- 5. TABELLA CARRELLO (INDISPENSABILE PER IL SALVATAGGIO)
+-- 5. TABELLA CARRELLO
 -- ==========================================
 DROP TABLE IF EXISTS carrello;
 CREATE TABLE carrello (
     username VARCHAR(50) NOT NULL,
     id_scarpa INT NOT NULL,
-    PRIMARY KEY (username, id_scarpa), -- Se vuoi permettere duplicati (es. 2 paia uguali), rimuovi questa PK
+    PRIMARY KEY (username, id_scarpa),
     FOREIGN KEY (username) REFERENCES UTENTE(USERNAME) ON DELETE CASCADE,
     FOREIGN KEY (id_scarpa) REFERENCES SCARPE(idSCARPA) ON DELETE CASCADE
 );
@@ -87,8 +88,6 @@ INSERT INTO UTENTE (USERNAME, EMAIL, PASSWORD, INDIRIZZO, CITTA, CAP, NUMERO_CAR
 -- ==========================================
 -- POPOLAMENTO DATI - SCARPE
 -- ==========================================
-
--- ----------------- NIKE -----------------
 INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
 ('Air Zoom Pegasus 40', 'NIKE', 'Corsa', 'UOMO', 42.5, 129.99, 15, 'La scarpa alata per eccellenza.', '/images/scarpa 1.png'),
 ('Invincible 3', 'NIKE', 'Corsa', 'UOMO', 43.0, 189.99, 8, 'Massima ammortizzazione per lunghe distanze.', '/images/scarpa 1.png'),
@@ -101,10 +100,7 @@ INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita,
 ('Mercurial Superfly 9 Elite', 'NIKE', 'Calcio', 'UOMO', 42.0, 279.99, 5, 'Velocità esplosiva in campo.', '/images/scarpa 3.png'),
 ('Tiempo Legend 10 Elite', 'NIKE', 'Calcio', 'UOMO', 43.0, 249.99, 8, 'Tocco leggendario, pelle premium.', '/images/scarpa 3.png'),
 ('Phantom Luna Elite', 'NIKE', 'Calcio', 'DONNA', 39.0, 259.99, 6, 'Precisione e agilità per il calcio femminile.', '/images/scarpa 3.png'),
-('Mercurial Vapor 15 Pro', 'NIKE', 'Calcio', 'DONNA', 37.5, 149.99, 10, 'Velocità accessibile.', '/images/scarpa 3.png');
-
--- ----------------- ADIDAS -----------------
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Mercurial Vapor 15 Pro', 'NIKE', 'Calcio', 'DONNA', 37.5, 149.99, 10, 'Velocità accessibile.', '/images/scarpa 3.png'),
 ('Ultraboost Light', 'ADIDAS', 'Corsa', 'UOMO', 43.0, 180.00, 10, 'Energia epica, ora più leggera.', '/images/scarpa2.png'),
 ('Adizero Boston 12', 'ADIDAS', 'Corsa', 'UOMO', 42.5, 150.00, 8, 'Per il giorno della gara e l\'allenamento.', '/images/scarpa2.png'),
 ('Supernova Rise', 'ADIDAS', 'Corsa', 'DONNA', 38.0, 140.00, 15, 'Comfort quotidiano affidabile.', '/images/scarpa2.png'),
@@ -114,10 +110,7 @@ INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita,
 ('Exhibit Select', 'ADIDAS', 'Basket', 'DONNA', 40.0, 110.00, 8, 'Progettata specificamente per il piede femminile.', '/images/scarpa2.png'),
 ('Predator Elite', 'ADIDAS', 'Calcio', 'UOMO', 43.5, 249.99, 4, 'Controllo e potenza di tiro.', '/images/scarpa 3.png'),
 ('X Crazyfast.1', 'ADIDAS', 'Calcio', 'UOMO', 42.0, 219.99, 6, 'Leggerezza per la massima velocità.', '/images/scarpa 3.png'),
-('Copa Pure.1', 'ADIDAS', 'Calcio', 'DONNA', 38.5, 229.99, 5, 'Tocco puro e comfort.', '/images/scarpa 3.png');
-
--- ----------------- PUMA -----------------
-INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita, descrizione, url_immagine) VALUES
+('Copa Pure.1', 'ADIDAS', 'Calcio', 'DONNA', 38.5, 229.99, 5, 'Tocco puro e comfort.', '/images/scarpa 3.png'),
 ('Deviate Nitro 2', 'PUMA', 'Corsa', 'UOMO', 43.0, 159.99, 10, 'Piastra in carbonio per la massima propulsione.', '/images/scarpa 1.png'),
 ('Magnify Nitro 2', 'PUMA', 'Corsa', 'UOMO', 42.0, 139.99, 8, 'Massima ammortizzazione NITRO.', '/images/scarpa 1.png'),
 ('Run XX Nitro', 'PUMA', 'Corsa', 'DONNA', 38.0, 129.99, 12, 'Progettata per la biomeccanica femminile.', '/images/scarpa 1.png'),
@@ -130,12 +123,68 @@ INSERT INTO SCARPE (modello, marca, categoria, genere, taglia, prezzo, quantita,
 ('Ultra Match', 'PUMA', 'Calcio', 'DONNA', 38.0, 89.99, 10, 'Velocità accessibile, calzata femminile.', '/images/scarpa 3.png');
 
 -- ==========================================
--- POPOLAMENTO DATI - RECENSIONI
+-- POPOLAMENTO RECENSIONI (METODO SICURO)
 -- ==========================================
-INSERT INTO RECENSIONE (idSCARPA, USERNAME, voto, testo) VALUES
-(1, 'mario', 5, 'Le Pegasus non deludono mai, ottime per allenarsi.'),
-(3, 'lucia', 4, 'Molto comode, ma preferisco una scarpa più secca.'),
-(5, 'mario', 5, 'LeBron è il Re, scarpa incredibile!'),
-(12, 'mario', 4, 'Ottima trazione, un po'' pesanti.'),
-(16, 'lucia', 5, 'Finalmente una scarpa da corsa che si adatta al mio piede.'),
-(21, 'mario', 5, 'Design pazzesco, LaMelo spacca!');
+
+-- --- RECENSIONI NIKE ---
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 5, 'Le Pegasus non deludono mai, ottime per allenarsi.'
+FROM SCARPE WHERE modello = 'Air Zoom Pegasus 40';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'lucia', 4, 'Molto comode, ma preferisco una scarpa più secca.'
+FROM SCARPE WHERE modello = 'React Infinity Run 4';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 5, 'LeBron è il Re, scarpa incredibile!'
+FROM SCARPE WHERE modello = 'LeBron XXI';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 4, 'Ottima trazione, un po pesanti.'
+FROM SCARPE WHERE modello = 'Mercurial Vapor 15 Pro';
+
+-- --- RECENSIONI ADIDAS ---
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 5, 'Ultraboost comodissime, come camminare sulle nuvole!'
+FROM SCARPE WHERE modello = 'Ultraboost Light';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'lucia', 4, 'Ottime ma costano un po troppo.'
+FROM SCARPE WHERE modello = 'Ultraboost Light';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'seller', 5, 'Adizero perfette per la maratona.'
+FROM SCARPE WHERE modello = 'Adizero Boston 12';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 3, 'Harden belle ma un po pesanti.'
+FROM SCARPE WHERE modello = 'Harden Vol. 7';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'lucia', 5, 'Stile unico, in campo si notano.'
+FROM SCARPE WHERE modello = 'Harden Vol. 7';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 4, 'Predator classiche, tocco di palla eccellente.'
+FROM SCARPE WHERE modello = 'Predator Elite';
+
+-- --- RECENSIONI PUMA ---
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 4, 'Puma Deviate molto reattive.'
+FROM SCARPE WHERE modello = 'Deviate Nitro 2';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'lucia', 5, 'Rapporto qualità prezzo imbattibile.'
+FROM SCARPE WHERE modello = 'Deviate Nitro 2';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 5, 'Le scarpe di LaMelo sono spaziali!'
+FROM SCARPE WHERE modello = 'MB.03 LaMelo Ball';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'lucia', 3, 'Belle ma calzano un po strette.'
+FROM SCARPE WHERE modello = 'Ultra Match';
+
+INSERT INTO RECENSIONE (id_scarpa, username_utente, voto, testo)
+SELECT idSCARPA, 'mario', 5, 'King Ultimate: pelle sintetica fantastica.'
+FROM SCARPE WHERE modello = 'King Ultimate';

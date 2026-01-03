@@ -34,7 +34,7 @@
                         <HBox alignment="CENTER" onMouseExited="#nascondiBarra" spacing="35.0">
                             <children>
                                 <Button fx:id="btnHome" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Home" />
-                                <Button fx:id="btnCarrello" onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Carrello" />
+                                <Button fx:id="btnCarrello" styleClass="nav-button" text="Carrello" style="-fx-border-color: white; -fx-border-width: 0 0 2 0;" />
                                 <Button fx:id="btnStato" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Stato ordine" />
                                 <Button fx:id="btnPreferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" />
                             </children>
@@ -50,7 +50,7 @@
                                 <StackPane>
                                     <children>
                                         <Button fx:id="btnLogin" onAction="#handleLoginGenerico" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" styleClass="login-button" text="Login" />
-                                        <Label fx:id="lblUser" managed="false" onMouseClicked="#handleVaiAreaPersonale" onMouseEntered="#sottolineaUser" onMouseExited="#ripristinaUser" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-cursor: hand;" textFill="WHITE" visible="false" />
+                                        <Label fx:id="lblUser" managed="false" onMouseClicked="#handleReloadHomeMouse" onMouseEntered="#sottolineaUser" onMouseExited="#ripristinaUser" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-cursor: hand;" textFill="WHITE" visible="false" />
                                     </children>
                                 </StackPane>
                             </children>
@@ -77,23 +77,44 @@
                 <HBox spacing="30.0" VBox.vgrow="ALWAYS">
                     <children>
                         <VBox spacing="20.0" HBox.hgrow="ALWAYS">
-                            <Label style="-fx-font-size: 32px; -fx-font-weight: bold;" text="Carrello" />
-                            <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                            <Label style="-fx-font-size: 32px; -fx-font-weight: bold;" text="Il tuo Carrello" />
+                            <ScrollPane fx:id="scrollPane" fitToWidth="true" style="-fx-background-color: transparent; -fx-background: white;" VBox.vgrow="ALWAYS">
                                 <content>
-                                    <VBox fx:id="containerProdotti" spacing="15.0" style="-fx-background-color: white;" />
+                                    <VBox fx:id="boxProdotti" spacing="15.0" style="-fx-background-color: white; -fx-padding: 10;" />
                                 </content>
                             </ScrollPane>
                         </VBox>
 
                         <VBox prefWidth="350.0" spacing="20.0" style="-fx-background-color: #f9f9f9; -fx-padding: 25; -fx-background-radius: 10; -fx-border-color: #eee;">
-                            <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Importo temporaneo da pagare" wrapText="true" />
+                            <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Riepilogo Ordine" wrapText="true" />
                             <Separator />
-                            <HBox><Label style="-fx-font-size: 16px;" text="Subtotal" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblSubtotale" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="0,00€" /></HBox>
-                            <HBox><Label style="-fx-font-size: 16px;" text="Iva (22%)" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblIva" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="0,00€" /></HBox>
+
+                            <HBox>
+                                <Label style="-fx-font-size: 16px;" text="Totale articoli" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblTotale" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="0,00€" />
+                            </HBox>
+
+                            <HBox>
+                                <Label style="-fx-font-size: 16px;" text="Spedizione" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblSpedizione" style="-fx-text-fill: green; -fx-font-weight: bold; -fx-font-size: 16px;" text="Gratuita" />
+                            </HBox>
+
                             <Separator />
-                            <HBox><Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="Total" /><Region HBox.hgrow="ALWAYS" /><Label fx:id="lblTotale" style="-fx-font-size: 20px; -fx-font-weight: bold;" text="0,00€" /></HBox>
-                            <Button maxWidth="Infinity" onAction="#handleCheckout" style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 25; -fx-cursor: hand;" text="Continua con il checkout" />
-                            <Label alignment="CENTER" maxWidth="Infinity" style="-fx-text-fill: grey; -fx-font-size: 12px;" text="Reindirizzamento al sistema di pagamento" />
+
+                            <HBox>
+                                <Label style="-fx-font-size: 20px; -fx-font-weight: bold;" text="TOTALE" />
+                                <Region HBox.hgrow="ALWAYS" />
+                                <Label fx:id="lblTotaleFinale" style="-fx-font-size: 22px; -fx-font-weight: bold;" text="0,00€" />
+                            </HBox>
+
+                            <Button maxWidth="Infinity" onAction="#handleProcediCheckout" style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 25; -fx-cursor: hand;" text="PROCEDI AL CHECKOUT" />
+
+                            <Label alignment="CENTER" maxWidth="Infinity" style="-fx-text-fill: grey; -fx-font-size: 12px;" text="Pagamento sicuro SSL 100%" />
+                            <HBox alignment="CENTER" spacing="10">
+                                <ImageView fitHeight="25" preserveRatio="true"><image><Image url="@/images/logo_google.png"/></image></ImageView>
+                            </HBox>
                         </VBox>
                     </children>
                 </HBox>

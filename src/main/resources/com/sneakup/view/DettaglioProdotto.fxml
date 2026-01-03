@@ -103,7 +103,13 @@
                                             <Label fx:id="lblModello" text="Nike Caricamento...">
                                                 <font><Font name="System Bold" size="28.0" /></font>
                                             </Label>
-                                            <Label text="★★★★☆" textFill="#e0a91f" style="-fx-font-size: 20px;" />
+
+                                            <HBox alignment="CENTER_LEFT" spacing="5">
+                                                <HBox fx:id="containerStelle" spacing="2" alignment="CENTER_LEFT" />
+                                                <Label fx:id="lblNumeroVoti" text="(0/5)" textFill="#777777">
+                                                    <font><Font size="14.0" /></font>
+                                                </Label>
+                                            </HBox>
                                         </HBox>
 
                                         <GridPane hgap="15" vgap="15">
@@ -143,7 +149,6 @@
                                     <TextFlow>
                                         <Text fx:id="txtDescrizione" style="-fx-font-size: 14px; -fx-fill: #333;" text="Caricamento..." />
                                     </TextFlow>
-                                    <Label fx:id="lblInfoExtra" text="Colore mostrato in foto: ..." style="-fx-text-fill: grey;" />
                                 </VBox>
 
                                 <Separator orientation="VERTICAL" />
