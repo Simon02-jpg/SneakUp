@@ -87,7 +87,7 @@
                 <VBox spacing="20.0" style="-fx-background-color: white;" VBox.vgrow="ALWAYS">
                     <padding><Insets bottom="40" left="50" right="50" top="20" /></padding>
                     <children>
-                        <Button onAction="#handleIndietro" text="← Torna indietro" style="-fx-background-color: transparent; -fx-text-fill: #555; -fx-font-size: 14px; -fx-cursor: hand;" />
+                        <Button fx:id="btnIndietro" onAction="#handleIndietro" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" text="← Torna indietro" style="-fx-background-color: transparent; -fx-text-fill: #555; -fx-font-size: 14px; -fx-cursor: hand;" />
 
                         <HBox spacing="40.0" alignment="TOP_CENTER">
                             <children>
@@ -114,10 +114,10 @@
 
                                         <GridPane hgap="15" vgap="15">
                                             <Label text="Seleziona la taglia" GridPane.rowIndex="0" GridPane.columnIndex="0" style="-fx-font-size: 16px;" />
-                                            <ComboBox fx:id="comboTaglia" prefWidth="120.0" promptText="36 EU" GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                                            <ComboBox fx:id="comboTaglia" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" prefWidth="120.0" promptText="36 EU" GridPane.rowIndex="0" GridPane.columnIndex="1" />
 
                                             <Label text="Seleziona il colore" GridPane.rowIndex="1" GridPane.columnIndex="0" style="-fx-font-size: 16px;" />
-                                            <ComboBox fx:id="comboColore" prefWidth="150.0" promptText="Green/Barely" GridPane.rowIndex="1" GridPane.columnIndex="1" />
+                                            <ComboBox fx:id="comboColore" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" prefWidth="150.0" promptText="Green/Barely" GridPane.rowIndex="1" GridPane.columnIndex="1" />
                                         </GridPane>
 
                                         <Label fx:id="lblPrezzo" text="Caricamento ..." style="-fx-font-size: 22px;">
@@ -126,12 +126,12 @@
 
                                         <HBox spacing="20.0" style="-fx-padding: 20 0 0 0;">
                                             <VBox alignment="CENTER" spacing="5">
-                                                <Button onAction="#handleAcquista" text="Acquista ora"
+                                                <Button fx:id="btnAcquista" onAction="#handleAcquista" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" text="Acquista ora"
                                                         style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 10 30; -fx-background-radius: 8; -fx-cursor: hand;" />
                                             </VBox>
 
                                             <VBox alignment="CENTER" spacing="5">
-                                                <Button onAction="#handleAggiungiAlCarrello" text="Aggiungi al carrello"
+                                                <Button fx:id="btnAggiungiCarrello" onAction="#handleAggiungiAlCarrello" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" text="Aggiungi al carrello"
                                                         style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 10 30; -fx-background-radius: 8; -fx-cursor: hand;" />
                                             </VBox>
                                         </HBox>

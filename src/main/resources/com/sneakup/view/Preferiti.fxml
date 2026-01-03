@@ -8,7 +8,6 @@
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.Region?>
@@ -35,7 +34,7 @@
                                 <Button fx:id="btnHome" onAction="#handleReloadHome" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Home" />
                                 <Button fx:id="btnCarrello" onAction="#handleCarrello" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Carrello" />
                                 <Button fx:id="btnStato" onAction="#handleStatoOrdine" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Stato ordine" />
-                                <Button fx:id="btnPreferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" />
+                                <Button fx:id="btnPreferiti" onAction="#handlePreferiti" onMouseEntered="#mostraEmuoviBarra" styleClass="nav-button" text="Preferiti" style="-fx-border-color: white; -fx-border-width: 0 0 2 0;" />
                             </children>
                         </HBox>
                         <Region HBox.hgrow="ALWAYS" />
@@ -65,7 +64,7 @@
     </top>
 
     <center>
-        <VBox spacing="20.0">
+        <VBox spacing="20.0" style="-fx-background-color: white;">
             <padding><Insets bottom="20" left="50" right="50" top="30" /></padding>
             <children>
                 <HBox alignment="CENTER_LEFT">
@@ -79,10 +78,10 @@
                 </Label>
                 <Separator />
 
-                <ScrollPane fitToWidth="true" style="-fx-background-color: transparent;" VBox.vgrow="ALWAYS">
+                <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent; -fx-background: white; -fx-control-inner-background: white;" VBox.vgrow="ALWAYS">
                     <content>
-                        <GridPane fx:id="gridPreferiti" hgap="20.0" vgap="20.0">
-                        </GridPane>
+                        <VBox fx:id="containerPreferiti" spacing="20.0" style="-fx-background-color: white; -fx-padding: 10;">
+                        </VBox>
                     </content>
                 </ScrollPane>
             </children>

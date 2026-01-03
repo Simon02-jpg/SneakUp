@@ -71,7 +71,7 @@
         <VBox spacing="20.0" style="-fx-padding: 40; -fx-background-color: white;">
             <children>
                 <HBox alignment="CENTER_LEFT">
-                    <Button onAction="#handleIndietro" style="-fx-background-color: #f5f5f5; -fx-background-radius: 20; -fx-cursor: hand; -fx-text-fill: #555; -fx-font-size: 14px; -fx-padding: 8 15;" text="← Torna indietro" />
+                    <Button fx:id="btnIndietro" onAction="#handleIndietro" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" style="-fx-background-color: #f5f5f5; -fx-background-radius: 20; -fx-cursor: hand; -fx-text-fill: #555; -fx-font-size: 14px; -fx-padding: 8 15;" text="← Torna indietro" />
                 </HBox>
 
                 <HBox spacing="30.0" VBox.vgrow="ALWAYS">
@@ -109,7 +109,7 @@
                                 <Label fx:id="lblTotaleFinale" style="-fx-font-size: 22px; -fx-font-weight: bold;" text="0,00€" />
                             </HBox>
 
-                            <Button maxWidth="Infinity" onAction="#handleProcediCheckout" style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 25; -fx-cursor: hand;" text="PROCEDI AL CHECKOUT" />
+                            <Button fx:id="btnCheckout" maxWidth="Infinity" onAction="#handleProcediCheckout" onMouseEntered="#iconaEntra" onMouseExited="#iconaEsce" style="-fx-background-color: #ff0000; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 12; -fx-background-radius: 25; -fx-cursor: hand;" text="PROCEDI AL CHECKOUT" />
 
                             <Label alignment="CENTER" maxWidth="Infinity" style="-fx-text-fill: grey; -fx-font-size: 12px;" text="Pagamento sicuro SSL 100%" />
                             <HBox alignment="CENTER" spacing="10">

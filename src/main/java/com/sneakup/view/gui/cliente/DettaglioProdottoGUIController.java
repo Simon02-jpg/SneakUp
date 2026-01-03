@@ -1,6 +1,6 @@
 package com.sneakup.view.gui.cliente;
 
-import com.sneakup.controller.GestoreProdotti; // IMPORT NUOVO: Usiamo il Controller Applicativo
+import com.sneakup.controller.GestoreProdotti;
 import com.sneakup.model.Sessione;
 import com.sneakup.model.domain.Recensione;
 import com.sneakup.model.domain.Scarpa;
@@ -37,18 +37,24 @@ public class DettaglioProdottoGUIController {
     @FXML private Button btnLogin;
     @FXML private Label lblUser;
     @FXML private Region barraAnimata;
-
     @FXML private HBox containerStelle;
     @FXML private Label lblNumeroVoti;
     @FXML private VBox containerRecensioni;
 
-    private Scarpa scarpaBase; // La scarpa originale dal DB
-    private double prezzoFinaleCalcolato; // Il prezzo che cambia dinamicamente
+    // Riferimenti ai bottoni per applicare le animazioni via codice se non settati da FXML
+    @FXML private Button btnAcquista, btnAggiungiCarrello, btnIndietro;
+
+    private Scarpa scarpaBase;
+    private double prezzoFinaleCalcolato;
 
     private String prevBrand, prevCategoria, prevGenere, prevRicerca;
+    private String fxmlProvenienza = "/com/sneakup/view/ListaProdotti.fxml";
 
-    // MODIFICA BCE: Sostituito DAO con Gestore
     private final GestoreProdotti gestore = new GestoreProdotti();
+
+    public void setProvenienza(String fxmlPath) {
+        this.fxmlProvenienza = fxmlPath;
+    }
 
     public void setStatoPrecedente(String brand, String cat, String gen, String ricerca) {
         this.prevBrand = brand;
@@ -61,7 +67,6 @@ public class DettaglioProdottoGUIController {
     public void initialize() {
         if (barraAnimata != null) barraAnimata.setOpacity(0.0);
 
-        // Header Utente
         if (Sessione.getInstance().isLoggato()) {
             if (btnLogin != null) { btnLogin.setVisible(false); btnLogin.setManaged(false); }
             if (lblUser != null) {
@@ -70,72 +75,55 @@ public class DettaglioProdottoGUIController {
             }
         }
 
-        // STILE ROSSO ARROTONDATO (Coerente con il Carrello)
+        // --- STILE E LOGICA COMBOBOX ---
         String styleSelettori = "-fx-background-color: #ff0000; -fx-text-fill: white; -fx-mark-color: white; -fx-font-weight: bold; -fx-background-radius: 20; -fx-font-size: 14px; -fx-padding: 5 10;";
-
-        // Popolamento e Styling ComboBox Taglia
         if (comboTaglia != null) {
-            if (comboTaglia.getItems().isEmpty()) {
-                comboTaglia.getItems().addAll("38", "39", "40", "41", "42", "43", "44", "45", "46");
-            }
+            if (comboTaglia.getItems().isEmpty()) comboTaglia.getItems().addAll("38", "39", "40", "41", "42", "43", "44", "45", "46");
             comboTaglia.setStyle(styleSelettori);
-            // Forza testo bianco
-            comboTaglia.setButtonCell(new ListCell<String>() {
-                @Override protected void updateItem(String item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) setText(null);
-                    else { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); }
-                }
-            });
+            comboTaglia.setButtonCell(new ListCell<>() { @Override protected void updateItem(String item, boolean empty) { super.updateItem(item, empty); if (!empty && item!=null) { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); } else setText(null); }});
             comboTaglia.setOnAction(e -> aggiornaPrezzoDinamico());
         }
-
-        // Popolamento e Styling ComboBox Colore
         if (comboColore != null) {
-            if (comboColore.getItems().isEmpty()) {
-                comboColore.getItems().addAll("Standard", "Black/White", "Limited Edition (+20€)", "Custom Gold (+50€)");
-            }
+            if (comboColore.getItems().isEmpty()) comboColore.getItems().addAll("Standard", "Black/White", "Limited Edition (+20€)", "Custom Gold (+50€)");
             comboColore.setStyle(styleSelettori);
-            // Forza testo bianco
-            comboColore.setButtonCell(new ListCell<String>() {
-                @Override protected void updateItem(String item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) setText(null);
-                    else { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); }
-                }
-            });
+            comboColore.setButtonCell(new ListCell<>() { @Override protected void updateItem(String item, boolean empty) { super.updateItem(item, empty); if (!empty && item!=null) { setText(item); setTextFill(javafx.scene.paint.Color.WHITE); } else setText(null); }});
             comboColore.setOnAction(e -> aggiornaPrezzoDinamico());
+        }
+
+        // --- APPLICAZIONE ANIMAZIONI AI BOTTONI ---
+        // Se hai dato dei fx:id ai bottoni nel file FXML, questo li rende interattivi automaticamente
+        configuraAnimazioneBottone(btnAcquista);
+        configuraAnimazioneBottone(btnAggiungiCarrello);
+        configuraAnimazioneBottone(btnIndietro);
+    }
+
+    private void configuraAnimazioneBottone(Button btn) {
+        if (btn != null) {
+            btn.setOnMouseEntered(e -> zoom(btn, 1.05));
+            btn.setOnMouseExited(e -> zoom(btn, 1.0));
         }
     }
 
     public void setDettagliScarpa(Scarpa s) {
         this.scarpaBase = s;
         this.prezzoFinaleCalcolato = s.getPrezzo();
-
         if (lblModello != null) lblModello.setText(s.getModello());
         if (lblPrezzo != null) lblPrezzo.setText(String.format("€%.2f", s.getPrezzo()));
-
-        if (txtDescrizione != null) {
-            txtDescrizione.setText((s.getDescrizione() != null && !s.getDescrizione().isEmpty())
-                    ? s.getDescrizione() : "Descrizione tecnica non disponibile.");
-        }
+        if (txtDescrizione != null) txtDescrizione.setText((s.getDescrizione() != null && !s.getDescrizione().isEmpty()) ? s.getDescrizione() : "Descrizione tecnica non disponibile.");
 
         if (imgScarpa != null && s.getUrlImmagine() != null) {
             try {
                 imgScarpa.setImage(new Image(getClass().getResource(s.getUrlImmagine()).toExternalForm()));
-            } catch (Exception e) {}
-        }
-
-        // Seleziona i valori di default
-        if (comboTaglia != null) {
-            String tagliaDb = String.valueOf((int)s.getTaglia());
-            if (comboTaglia.getItems().contains(tagliaDb)) {
-                comboTaglia.setValue(tagliaDb);
-            } else {
-                comboTaglia.getSelectionModel().select(0);
+            } catch (Exception e) {
+                System.err.println("Errore caricamento immagine: " + s.getUrlImmagine());
             }
         }
 
+        if (comboTaglia != null) {
+            String tagliaDb = String.valueOf((int)s.getTaglia());
+            if (comboTaglia.getItems().contains(tagliaDb)) comboTaglia.setValue(tagliaDb);
+            else comboTaglia.getSelectionModel().select(0);
+        }
         if (comboColore != null) comboColore.getSelectionModel().select(0);
 
         aggiornaGraficaStelle();
@@ -143,28 +131,14 @@ public class DettaglioProdottoGUIController {
         aggiornaPrezzoDinamico();
     }
 
-    /**
-     * MODIFICA BCE: Deleghiamo il calcolo del prezzo al GestoreProdotti
-     */
     private void aggiornaPrezzoDinamico() {
         if (scarpaBase == null) return;
-
-        // Recupero input dalla vista
-        int taglia = 38; // Default
-        try {
-            if (comboTaglia.getValue() != null)
-                taglia = Integer.parseInt(comboTaglia.getValue());
-        } catch (Exception e) {}
-
+        int taglia = 38;
+        try { if (comboTaglia.getValue() != null) taglia = Integer.parseInt(comboTaglia.getValue()); } catch (Exception e) {}
         String colore = comboColore.getValue();
-
-        // CHIAMATA AL GESTORE (Business Logic separata)
         this.prezzoFinaleCalcolato = gestore.calcolaPrezzoDinamico(scarpaBase, taglia, colore);
-
-        // Aggiorna UI
         if (lblPrezzo != null) lblPrezzo.setText(String.format("€%.2f", this.prezzoFinaleCalcolato));
 
-        // Calcolo sovrapprezzo solo per visualizzazione
         double sovrapprezzo = this.prezzoFinaleCalcolato - scarpaBase.getPrezzo();
         if (lblInfoExtra != null) {
             if (sovrapprezzo > 0) lblInfoExtra.setText(String.format("(Sovrapprezzo variante: +€%.2f)", sovrapprezzo));
@@ -173,9 +147,29 @@ public class DettaglioProdottoGUIController {
     }
 
     @FXML
+    private void handleIndietro(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlProvenienza));
+            Parent root = loader.load();
+            Object controller = loader.getController();
+
+            if (controller instanceof ListaProdottiGUIController) {
+                ListaProdottiGUIController ctrl = (ListaProdottiGUIController) controller;
+                if (prevRicerca != null && !prevRicerca.isEmpty()) ctrl.setRicercaGlobale(prevRicerca);
+                else ctrl.setFiltri(prevBrand, prevCategoria, prevGenere);
+            }
+            else if (controller instanceof PreferitiGUIController) {
+                ((PreferitiGUIController) controller).setProvenienza(prevBrand, prevCategoria, prevGenere, prevRicerca, null, null);
+            }
+
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(root));
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
+    @FXML
     private void handleAggiungiAlCarrello(ActionEvent event) {
         if (scarpaBase != null) {
-            // 1. CLONIAMO L'OGGETTO
             Scarpa scarpaDaComprare = new Scarpa();
             scarpaDaComprare.setId(scarpaBase.getId());
             scarpaDaComprare.setMarca(scarpaBase.getMarca());
@@ -183,33 +177,22 @@ public class DettaglioProdottoGUIController {
             scarpaDaComprare.setGenere(scarpaBase.getGenere());
             scarpaDaComprare.setUrlImmagine(scarpaBase.getUrlImmagine());
             scarpaDaComprare.setDescrizione(scarpaBase.getDescrizione());
-
-            // 2. APPLICHIAMO LE SCELTE DELL'UTENTE
             scarpaDaComprare.setPrezzo(this.prezzoFinaleCalcolato);
 
             try {
-                double tagliaScelta = Double.parseDouble(comboTaglia.getValue());
-                scarpaDaComprare.setTaglia(tagliaScelta);
+                scarpaDaComprare.setTaglia(Double.parseDouble(comboTaglia.getValue()));
             } catch (Exception e) {
                 scarpaDaComprare.setTaglia(scarpaBase.getTaglia());
             }
 
             String coloreScelto = comboColore.getValue();
-            if (coloreScelto != null && !coloreScelto.equals("Standard")) {
+            if (coloreScelto != null && !coloreScelto.equals("Standard"))
                 scarpaDaComprare.setModello(scarpaBase.getModello() + " (" + coloreScelto + ")");
-            } else {
+            else
                 scarpaDaComprare.setModello(scarpaBase.getModello());
-            }
 
-            // 3. AGGIUNGIAMO AL CARRELLO
             Sessione.getInstance().aggiungiAlCarrello(scarpaDaComprare);
-
-            new Alert(Alert.AlertType.INFORMATION,
-                    "Aggiunto al carrello:\n" +
-                            scarpaDaComprare.getModello() + "\n" +
-                            "Taglia: " + (int)scarpaDaComprare.getTaglia() + "\n" +
-                            "Prezzo: €" + String.format("%.2f", scarpaDaComprare.getPrezzo())
-            ).showAndWait();
+            new Alert(Alert.AlertType.INFORMATION, "Aggiunto al carrello!").showAndWait();
         }
     }
 
@@ -219,57 +202,35 @@ public class DettaglioProdottoGUIController {
         handleVaiAlCarrello(event);
     }
 
-    // --- GESTIONE RECENSIONI (MODIFICA BCE: Usa il Gestore) ---
     private void caricaRecensioni() {
         if (containerRecensioni == null) return;
         containerRecensioni.getChildren().clear();
-
-        // CHIAMATA AL GESTORE INVECE CHE AL DAO
         List<Recensione> recensioni = gestore.getRecensioni(scarpaBase.getId());
-
         if (recensioni.isEmpty()) {
             Label noRec = new Label("Nessuna recensione per questo prodotto.");
             noRec.setStyle("-fx-text-fill: gray; -fx-font-style: italic; -fx-padding: 10;");
             containerRecensioni.getChildren().add(noRec);
             return;
         }
-
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         for (Recensione r : recensioni) {
             VBox box = new VBox(5);
             box.setStyle("-fx-border-color: #eeeeee; -fx-border-radius: 8; -fx-padding: 15; -fx-background-color: #fafafa;");
-
             HBox header = new HBox(10);
-            Label userLbl = new Label(r.getUsername());
-            userLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-            String dataStr = (r.getDataInserimento() != null) ? sdf.format(r.getDataInserimento()) : "";
-            Label dataLbl = new Label(dataStr);
-            dataLbl.setStyle("-fx-text-fill: #999999; -fx-font-size: 12px;");
+            Label userLbl = new Label(r.getUsername()); userLbl.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+            Label dataLbl = new Label((r.getDataInserimento() != null) ? sdf.format(r.getDataInserimento()) : ""); dataLbl.setStyle("-fx-text-fill: #999999; -fx-font-size: 12px;");
             header.getChildren().addAll(userLbl, dataLbl);
-
             HBox stelleBox = new HBox(2);
-            for (int i = 1; i <= 5; i++) {
-                Label stella = new Label("★");
-                stella.setStyle("-fx-font-size: 14px; -fx-text-fill: " + (i <= r.getVoto() ? "#ffce00;" : "#cccccc;"));
-                stelleBox.getChildren().add(stella);
-            }
-
-            Label testoLbl = new Label(r.getTesto());
-            testoLbl.setWrapText(true);
-            testoLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: #333333;");
-
+            for (int i = 1; i <= 5; i++) { Label stella = new Label("★"); stella.setStyle("-fx-font-size: 14px; -fx-text-fill: " + (i <= r.getVoto() ? "#ffce00;" : "#cccccc;")); stelleBox.getChildren().add(stella); }
+            Label testoLbl = new Label(r.getTesto()); testoLbl.setWrapText(true); testoLbl.setStyle("-fx-font-size: 13px; -fx-text-fill: #333333;");
             box.getChildren().addAll(header, stelleBox, testoLbl);
             containerRecensioni.getChildren().add(box);
         }
     }
 
-    // --- GRAFICA STELLE MEDIA (MODIFICA BCE: Usa il Gestore) ---
     private void aggiornaGraficaStelle() {
         if (containerStelle == null) return;
-
-        // CHIAMATA AL GESTORE
         double media = gestore.getMediaVoti(scarpaBase.getId());
-
         containerStelle.getChildren().clear();
         for (int i = 1; i <= 5; i++) {
             Label stella = new Label("★");
@@ -279,20 +240,8 @@ public class DettaglioProdottoGUIController {
         if (lblNumeroVoti != null) lblNumeroVoti.setText(String.format("(%.1f/5)", media));
     }
 
-    // --- NAVIGAZIONE ---
-    @FXML private void handleIndietro(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/ListaProdotti.fxml"));
-            Parent root = loader.load();
-            ListaProdottiGUIController ctrl = loader.getController();
-            if (prevRicerca != null && !prevRicerca.isEmpty()) ctrl.setRicercaGlobale(prevRicerca);
-            else ctrl.setFiltri(prevBrand, prevCategoria, prevGenere);
-            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new Scene(root));
-        } catch (IOException e) { e.printStackTrace(); }
-    }
-
-    @FXML private void handleVaiAlCarrello(ActionEvent event) {
+    @FXML
+    private void handleVaiAlCarrello(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Carrello.fxml"));
             Parent root = loader.load();
@@ -303,7 +252,8 @@ public class DettaglioProdottoGUIController {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
-    @FXML private void handlePreferiti(ActionEvent event) {
+    @FXML
+    private void handlePreferiti(ActionEvent event) {
         if (Sessione.getInstance().isLoggato()) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/sneakup/view/Preferiti.fxml"));
@@ -318,15 +268,31 @@ public class DettaglioProdottoGUIController {
         }
     }
 
-    // --- UTILS ---
+    // --- UTILS ANIMAZIONI ---
     @FXML public void mostraEmuoviBarra(MouseEvent event) { Node source = (Node) event.getSource(); Bounds b = source.localToScene(source.getBoundsInLocal()); Point2D loc = barraAnimata.getParent().sceneToLocal(b.getMinX(), 0); barraAnimata.setLayoutX(loc.getX()); barraAnimata.setPrefWidth(b.getWidth()); barraAnimata.setOpacity(1.0); }
     @FXML public void nascondiBarra(MouseEvent event) { if(barraAnimata!=null) barraAnimata.setOpacity(0.0); }
     @FXML public void sottolineaUser(MouseEvent e) { if (lblUser != null) lblUser.setUnderline(true); }
     @FXML public void ripristinaUser(MouseEvent e) { if (lblUser != null) lblUser.setUnderline(false); }
+
     @FXML public void iconaEntra(MouseEvent e) { zoom((Node) e.getSource(), 1.1); }
     @FXML public void iconaEsce(MouseEvent e) { zoom((Node) e.getSource(), 1.0); }
-    private void zoom(Node n, double s) { ScaleTransition st = new ScaleTransition(Duration.millis(200), n); st.setToX(s); st.setToY(s); st.play(); }
-    private void navigaSemplice(String fxml, java.util.EventObject e) { try { Parent root = FXMLLoader.load(getClass().getResource(fxml)); Stage s = (Stage)((Node)e.getSource()).getScene().getWindow(); s.setScene(new Scene(root)); } catch(Exception ex) { ex.printStackTrace(); } }
+
+    private void zoom(Node n, double s) {
+        if (n == null) return;
+        ScaleTransition st = new ScaleTransition(Duration.millis(200), n);
+        st.setToX(s);
+        st.setToY(s);
+        st.play();
+    }
+
+    private void navigaSemplice(String fxml, java.util.EventObject e) {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource(fxml));
+            Stage s = (Stage)((Node)e.getSource()).getScene().getWindow();
+            s.setScene(new Scene(root));
+        } catch(Exception ex) { ex.printStackTrace(); }
+    }
+
     @FXML private void handleReloadHome(ActionEvent event) { navigaSemplice("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleReloadHomeMouse(MouseEvent event) { navigaSemplice("/com/sneakup/view/Benvenuto.fxml", event); }
     @FXML private void handleLoginGenerico(ActionEvent event) { navigaSemplice("/com/sneakup/view/Login.fxml", event); }
